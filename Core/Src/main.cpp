@@ -39,6 +39,12 @@
  * PA9	TIM1_CH2
  * PA10	TIM1_CH3
  *
+ * TIM4 Encoder mode: PB6, PB7
+ *
+ * Encoder Button:  PA1
+ *
+ * LED: PA2
+ *
  */
 
 /* USER CODE END Header */
@@ -227,32 +233,41 @@ int main(void)
   //sprintf((char*)buff,"%s %li ",MyEEPROM.GetItemText(3), MyEEPROM.GetItemValue(3));
   //ILI9341_WriteString(0, 165, (char*)buff, Font_11x18, RED, WHITE);
 
+  enum {
+	  M_TP, //Menu Top level ID  = 0
+	  M_CL,		//Menu Colors ID  = 1
+	  M_TM,		//Menu Time ID  = 2
+	  M_DT,		//Menu Date ID = 3
+	  M_SB,		//Menu Submenu3 ID = 4
+
+  };
+
   /*---------LCD Menu init-------------*/
-  LCDMenu.addItem(0,0,1,(char*)"R G B", 	NULL, 	ITEMTYPE_GOTOSUBMENU);
-	  LCDMenu.addItem(0,1,0,(char*)"Back..", 		NULL, 			ITEMTYPE_EXITSUBMENU);
-	  LCDMenu.addItem(0,1,0,(char*)"Red A", 		&pwm1_value_A, 	ITEMTYPE_NORMAL, 	Menu_Red_Callback);
-	  LCDMenu.addItem(0,1,0,(char*)"Green A",		&pwm2_value_A, 	ITEMTYPE_NORMAL, 	Menu_Green_Callback);
-	  LCDMenu.addItem(0,1,0,(char*)"Blue A",		&pwm3_value_A, 	ITEMTYPE_NORMAL, 	Menu_Blue_Callback);
-	  LCDMenu.addItem(0,1,0,(char*)"Red B", 		&pwm1_value_B, 	ITEMTYPE_NORMAL);
-	  LCDMenu.addItem(0,1,0,(char*)"Green B",		&pwm2_value_B, 	ITEMTYPE_NORMAL);
-	  LCDMenu.addItem(0,1,0,(char*)"Blue B",		&pwm3_value_B, 	ITEMTYPE_NORMAL);
-  LCDMenu.addItem(0,0,2,(char*)"Set time", 		NULL,			ITEMTYPE_GOTOSUBMENU);
-  	  LCDMenu.addItem(0,2,0,(char*)"Back..", 		NULL,			ITEMTYPE_EXITSUBMENU);
-  	  LCDMenu.addItem(0,2,0,(char*)"Hours", 		&menu_Hours, 	ITEMTYPE_NORMAL, 	Menu_SetHours_Callback);
-  	  LCDMenu.addItem(0,2,0,(char*)"Minutes", 		&menu_Minutes, 	ITEMTYPE_NORMAL, 	Menu_SetMinutes_Callback);
-  	  LCDMenu.addItem(0,2,0,(char*)"Seconds", 		&menu_Seconds, 	ITEMTYPE_NORMAL, 	Menu_SetSeconds_Callback);
-  LCDMenu.addItem(0,0,3,(char*)"Set date", 		NULL,			ITEMTYPE_GOTOSUBMENU);
-  	  LCDMenu.addItem(0,3,0,(char*)"Back..", 		NULL,			ITEMTYPE_EXITSUBMENU);
-  	  LCDMenu.addItem(0,3,0,(char*)"Day", 			&menu_Day, 		ITEMTYPE_NORMAL, 	Menu_SetDay_Callback);
-  	  LCDMenu.addItem(0,3,0,(char*)"Month", 		&menu_Month, 	ITEMTYPE_NORMAL, 	Menu_SetMonth_Callback);
-  	  LCDMenu.addItem(0,3,0,(char*)"Year", 			&menu_Year, 	ITEMTYPE_NORMAL, 	Menu_SetYear_Callback);
-      LCDMenu.addItem(0,3,4,(char*)"To submenu3", NULL,			ITEMTYPE_GOTOSUBMENU);
-  	  	  LCDMenu.addItem(2,4,0,(char*)"Back..", 		NULL, 			ITEMTYPE_EXITSUBMENU);
-  	  	  LCDMenu.addItem(2,4,0,(char*)"Submenu3.1", 	&pwm1_value_A, 	ITEMTYPE_NORMAL);
-  	  	  LCDMenu.addItem(2,4,0,(char*)"Submenu3.2", 	&pwm2_value_A, 	ITEMTYPE_NORMAL);
-  	  	  LCDMenu.addItem(2,4,0,(char*)"Submenu3.3", 	&pwm3_value_A, 	ITEMTYPE_NORMAL);
-  LCDMenu.addItem(0,0,0,(char*)"Store settings", 	NULL,	 	 ITEMTYPE_CALLBACK_ONLY, 	Menu_StoreSettings_Callback);
-  LCDMenu.addItem(0,0,0,(char*)"Load settings", 	NULL, 		 ITEMTYPE_CALLBACK_ONLY, 	Menu_LoadSettings_Callback);
+  LCDMenu.addItem(M_TP,M_TP,M_CL,(char*)"R G B", 			ITEMTYPE_GOTOSUBMENU);
+	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Back..", 		ITEMTYPE_EXITSUBMENU);
+	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Red A", 			ITEMTYPE_NORMAL, 	&pwm1_value_A, 	Menu_Red_Callback);
+	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Green A",			ITEMTYPE_NORMAL, 	&pwm2_value_A, 	Menu_Green_Callback);
+	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Blue A",			ITEMTYPE_NORMAL, 	&pwm3_value_A, 	Menu_Blue_Callback);
+	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Red B", 			ITEMTYPE_NORMAL, 	&pwm1_value_B);
+	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Green B",			ITEMTYPE_NORMAL, 	&pwm2_value_B);
+	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Blue B",			ITEMTYPE_NORMAL, 	&pwm3_value_B);
+  LCDMenu.addItem(M_TP,M_TP,M_TM,(char*)"Set time", 		ITEMTYPE_GOTOSUBMENU);
+  	  LCDMenu.addItem(M_TP,M_TM,M_TP,(char*)"Back..", 			ITEMTYPE_EXITSUBMENU);
+  	  LCDMenu.addItem(M_TP,M_TM,M_TP,(char*)"Hours", 			ITEMTYPE_NORMAL, 	&menu_Hours, 	Menu_SetHours_Callback);
+  	  LCDMenu.addItem(M_TP,M_TM,M_TP,(char*)"Minutes", 			ITEMTYPE_NORMAL, 	&menu_Minutes, 	Menu_SetMinutes_Callback);
+  	  LCDMenu.addItem(M_TP,M_TM,M_TP,(char*)"Seconds", 			ITEMTYPE_NORMAL, 	&menu_Seconds, 	Menu_SetSeconds_Callback);
+  LCDMenu.addItem(M_TP,M_TP,3,(char*)"Set date", 			ITEMTYPE_GOTOSUBMENU);
+  	  LCDMenu.addItem(M_TP,3,M_TP,(char*)"Back..", 				ITEMTYPE_EXITSUBMENU);
+  	  LCDMenu.addItem(M_TP,3,M_TP,(char*)"Day", 				ITEMTYPE_NORMAL, 		&menu_Day, 	Menu_SetDay_Callback);
+  	  LCDMenu.addItem(M_TP,3,M_TP,(char*)"Month", 				ITEMTYPE_NORMAL, 	&menu_Month, 	Menu_SetMonth_Callback);
+  	  LCDMenu.addItem(M_TP,3,M_TP,(char*)"Year", 				ITEMTYPE_NORMAL, 	&menu_Year, 	Menu_SetYear_Callback);
+      LCDMenu.addItem(M_TP,3,4,(char*)"To submenu3", 			ITEMTYPE_GOTOSUBMENU);
+  	  	  LCDMenu.addItem(M_TM,4,M_TP,(char*)"Back..", 				ITEMTYPE_EXITSUBMENU);
+  	  	  LCDMenu.addItem(M_TM,4,M_TP,(char*)"Submenu3.1", 			ITEMTYPE_NORMAL, 	&pwm1_value_A);
+  	  	  LCDMenu.addItem(M_TM,4,M_TP,(char*)"Submenu3.2", 			ITEMTYPE_NORMAL, 	&pwm2_value_A);
+  	  	  LCDMenu.addItem(M_TM,4,M_TP,(char*)"Submenu3.3", 			ITEMTYPE_NORMAL, 	&pwm3_value_A);
+  LCDMenu.addItem(M_TP,M_TP,M_TP,(char*)"Store settings", 	ITEMTYPE_CALLBACK_ONLY,	 	 NULL, 	Menu_StoreSettings_Callback);
+  LCDMenu.addItem(M_TP,M_TP,M_TP,(char*)"Load settings", 	ITEMTYPE_CALLBACK_ONLY, 	 NULL, 	Menu_LoadSettings_Callback);
 
   LCDMenu.DrawMenu();
 

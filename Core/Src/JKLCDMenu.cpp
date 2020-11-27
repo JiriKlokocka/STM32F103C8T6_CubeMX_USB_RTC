@@ -276,34 +276,52 @@ void JKLCDMenu::EditCallbackOnly()
 	}
 }
 
-void JKLCDMenu::addItem(uint8_t parentLevelID, uint8_t levelID, uint8_t childLevelID, char* txt, int32_t* value, uint8_t itemType)
+void JKLCDMenu::addItem(uint8_t parentLevelID, uint8_t levelID, uint8_t childLevelID, char* txt, uint8_t itemType, int32_t* value, MenuCallback func )
 {
 	uint8_t pos = itemCount;  // position of newly added task is based on priority
 	MENU_ITEM &itm = MenuItems[pos];
 	itm.itemIndex = itemCount;
 	itm.itemType = itemType;
 	itm.text = txt;
-	itm.value = value;
 	itm.parentLevelID = parentLevelID;
 	itm.levelID = levelID;
 	itm.childLevelID = childLevelID;
-	itemCount++;
-}
-
-void JKLCDMenu::addItem(uint8_t parentLevelID, uint8_t levelID, uint8_t childLevelID, char* txt, int32_t* value, uint8_t itemType, MenuCallback func )
-{
-	uint8_t pos = itemCount;  // position of newly added task is based on priority
-	MENU_ITEM &itm = MenuItems[pos];
-	itm.itemIndex = itemCount;
-	itm.itemType = itemType;
-	itm.text = txt;
 	itm.value = value;
-	itm.parentLevelID = parentLevelID;
-	itm.levelID = levelID;
-	itm.childLevelID = childLevelID;
 	itm.call = func;
 	itemCount++;
 }
+
+
+void JKLCDMenu::addItem(uint8_t parentLevelID, uint8_t levelID, uint8_t childLevelID, char* txt, uint8_t itemType, int32_t* value)
+{
+	uint8_t pos = itemCount;  // position of newly added task is based on priority
+	MENU_ITEM &itm = MenuItems[pos];
+	itm.itemIndex = itemCount;
+	itm.itemType = itemType;
+	itm.text = txt;
+	itm.parentLevelID = parentLevelID;
+	itm.levelID = levelID;
+	itm.childLevelID = childLevelID;
+	itm.value = value;
+	itm.call = NULL;
+	itemCount++;
+}
+
+void JKLCDMenu::addItem(uint8_t parentLevelID, uint8_t levelID, uint8_t childLevelID, char* txt, uint8_t itemType)
+{
+	uint8_t pos = itemCount;  // position of newly added task is based on priority
+	MENU_ITEM &itm = MenuItems[pos];
+	itm.itemIndex = itemCount;
+	itm.itemType = itemType;
+	itm.text = txt;
+	itm.parentLevelID = parentLevelID;
+	itm.levelID = levelID;
+	itm.childLevelID = childLevelID;
+	itm.value = NULL;
+	itm.call = NULL;
+	itemCount++;
+}
+
 
 uint8_t JKLCDMenu::FillCurrentItemsTable(uint8_t currenLevelId) {
 	//char buff[20];

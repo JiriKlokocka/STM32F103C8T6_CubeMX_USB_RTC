@@ -69,8 +69,10 @@ class JKLCDMenu
 		MENU_ITEM MenuItems[LCDMENU_MAXITEMS];
 
 		//, int32_t lowerLimit, int32_t upperLimit, int32_t multiplier
-		void addItem(uint8_t parentLevelID, uint8_t levelID, uint8_t childLevelID, char* txt, int32_t* value, uint8_t itemType);
-		void addItem(uint8_t parentLevelID, uint8_t levelID, uint8_t childLevelID, char* txt, int32_t* value, uint8_t itemType, MenuCallback func );
+
+		void addItem(uint8_t parentLevelID, uint8_t levelID, uint8_t childLevelID, char* txt, uint8_t itemType, int32_t* value, MenuCallback func );
+		void addItem(uint8_t parentLevelID, uint8_t levelID, uint8_t childLevelID, char* txt, uint8_t itemType, int32_t* value);
+		void addItem(uint8_t parentLevelID, uint8_t levelID, uint8_t childLevelID, char* txt, uint8_t itemType);
 
 
 		uint8_t btnPressed;
