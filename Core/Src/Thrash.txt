@@ -1,0 +1,130 @@
+uint8_t USARTreceiveBuffer[USART_RXBUFFERSIZE];
+uint8_t USARTcommandBuffer[USART_CMDBUFFERSIZE];
+volatile uint8_t rxDataReceivedFlag = 0;
+volatile uint8_t rxCmdReceivedFlag = 0;
+
+
+
+main while(){
+	  if(rxCmdReceivedFlag != 0) {
+		  /*char rxBuff[100];
+		  sprintf((char*)rxBuff, "CMD: %s (%i)\r",USARTcommandBuffer, rxCmdReceivedFlag);
+		  HAL_UART_Transmit(&huart3, (uint8_t*)&rxBuff,strlen((char*)rxBuff), HAL_MAX_DELAY);
+		  rxCmdReceivedFlag = 0;*/
+
+		  //!!!! zajistit aby se nespoustelo pokud neni nalezen command !!!!
+		  USART_Process_Commands((char*)USARTcommandBuffer,rxCmdReceivedFlag );
+
+		  HAL_UART_Transmit(&huart3, USARTcommandBuffer,rxCmdReceivedFlag, HAL_MAX_DELAY);
+
+		  rxCmdReceivedFlag = 0;
+	  }
+
+	  if (rxDataReceivedFlag != 0) {
+
+		  //char rxBuff[100];
+		  //sprintf((char*)rxBuff, "%s",USARTreceiveBuffer);
+		  //HAL_UART_Transmit(&huart3, (uint8_t*)&rxBuff,strlen((char*)rxBuff), HAL_MAX_DELAY);
+
+		  ILI9341_Log_SetFColor(WHITE);
+		  char buff2[50];
+		  sprintf((char*)buff2, "%s\n", USARTreceiveBuffer);
+		  ILI9341_LogToLCD(buff2);
+		  ILI9341_Log_SetFColor(GREEN);
+
+		  //HAL_UART_Transmit(&huart3, USARTreceiveBuffer,rxDataReceivedFlag, HAL_MAX_DELAY);
+
+	      rxDataReceivedFlag = 0;
+	  }
+
+}
+
+
+
+void Interrupt_USART3(uint8_t *pData, uint16_t size) {
+
+	//static uint16_t i = 0;
+
+	//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_2);
+
+	//here insert command recognizing function
+
+	/*
+	for(uint16_t k=0; k < size; k++) { //for case when more than one character is received
+
+		uint8_t commandLen = USART_Extract_Commands(pData, USARTcommandBuffer, size, USART_CMDBUFFERSIZE);
+		if(commandLen != 0) {
+			rxCmdReceivedFlag = commandLen;
+			i = 0;
+			return;
+		} else {
+			//rxCmdReceivedFlag = 0;
+		}
+
+		if(pData[k] != '\n' ) { //&& rxDataReceivedFlag == 0
+
+			if(i < USART_RXBUFFERSIZE && pData[k] != '\r' ) {
+				USARTreceiveBuffer[i] = pData[k];
+				i++;
+			} else {
+				//in case the buffer is at the end - returns only overlaping characters
+				if(i >= USART_RXBUFFERSIZE) {
+					i = 0;
+					return;
+				} else {
+					USARTreceiveBuffer[i] = '\0';
+					rxDataReceivedFlag = i;
+					i = 0;
+				}
+				//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_2);
+			}
+		}
+
+	}
+	*/
+
+	/*
+	1) plnit buffer dokud neobsahuje command, pak nastavit flag
+	2) v main while precist flag a provesat prikaz
+
+	//USART_Extract_Commands(receiveBuffer, USART_RXBUFFERSIZE);
+	*/
+	//USART_Extract_Commands(pData, Size); //doplnit o &buffer a size (mozna zuniverzalnit??? Getstring? Majerle?
+	// upravit funkci ze kdyz zaregistruje \r\n vrati cely bufera zacne znovu?)
+
+}	
+	
+	
+	
+	
+	void USART3_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART3_IRQn 0 */
+	//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_2);
+
+	//Read SR register
+	if(USART3->SR & UART_IT_RXNE) // = if (USART3->SR & UART_IT_RXNE)
+	 {
+		//read character from DR register
+		const char c = USART3->DR;
+		ringbuf_put(&ringBuffer, c);
+
+		/* Puvodni
+
+		//read DR register clears the UART_IT_RXNE flag
+		ich = USART3->DR;
+		//call function to store incoming character
+		Interrupt_USART3(&ich,sizeof(ich));
+		//return to avoid unnecessary run of HAL_UART_IRQHandler
+		return;
+
+		*/
+	}
+
+
+  /* USER CODE END USART3_IRQn 0 */
+  HAL_UART_IRQHandler(&huart3);
+  /* USER CODE BEGIN USART3_IRQn 1 */
+
+  /* USER CODE END USART3_IRQn 1 */
+}
