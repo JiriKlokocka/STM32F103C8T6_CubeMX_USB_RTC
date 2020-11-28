@@ -61,7 +61,7 @@
 #include <JKLCDMenu.h>
 #include <JKEEPROM.h>
 #include "JK_USART_Commands.h"
-#include "ILI9341/ILI9341_STM32_Driver.h"
+#include "ILI9341_STM32_Driver.h"
 #include "eeprom.h"
 #include "ringbuf.h"
 #include <math.h>
@@ -211,9 +211,12 @@ int main(void)
   //Crosshair
   ILI9341_Draw_Horizontal_Line(0, LCD_HEIGHT/2, LCD_WIDTH, DARKGREY);
   //ILI9341_Draw_Vertical_Line(LCD_WIDTH/2, 0, LCD_HEIGHT, DARKGREY);
-  //Hornipruh
+  //Top Row
   ILI9341_Draw_Rectangle(0, 0, LCD_WIDTH, 18, ASSEMBLE_RGB(100,100,100));
   //ILI9341_WriteString(320/3, 6, "System started", Font_7x10, WHITE, ASSEMBLE_RGB(20,20,20));
+
+  //Spectrum
+  LCD_DrawSpectrum(0, LCD_HEIGHT/2, LCD_WIDTH/2, LCD_HEIGHT/2, 255);
 
   /*---------LCD Log init-------------*/
   ILI9341_Log_Init( LCD_WIDTH/2  , LCD_HEIGHT/2 + 0, LCD_WIDTH/2-1 , LCD_HEIGHT/2-1, BLACK, GREEN, 0);
@@ -238,7 +241,7 @@ int main(void)
 	  M_CL,		//Menu Colors ID  = 1
 	  M_TM,		//Menu Time ID  = 2
 	  M_DT,		//Menu Date ID = 3
-	  M_SB,		//Menu Submenu3 ID = 4
+	  M_SB,			//Menu Submenu3 ID = 4
 
   };
 
@@ -270,7 +273,6 @@ int main(void)
   LCDMenu.addItem(M_TP,M_TP,M_TP,(char*)"Load settings", 	ITEMTYPE_CALLBACK_ONLY, 	 NULL, 	Menu_LoadSettings_Callback);
 
   LCDMenu.DrawMenu();
-
 
   /*---------Ring Buffer init-------------*/
   ringbuf_init(&ringBuffer, &ringData, USART_RXBUFFERSIZE);
@@ -799,7 +801,15 @@ void LCDMENU_WriteString(char* buffer, uint16_t posx, uint16_t posy) {
 }
 
 void LCDMENU_WriteStringActive(char* buffer, uint16_t posx, uint16_t posy) {
-	ILI9341_WriteString(posx, posy, (char*)buffer, Font_11x18, BLACK, YELLOW);
+	ILI9341_WriteString(posx, posy, (char*)buffer, Font_11x18, WHITE, BLACK);
+}
+
+
+void LCDMENU_RectangleAround(uint16_t posx, uint16_t posy, uint16_t width, uint16_t height) {
+	ILI9341_Draw_Hollow_Rectangle_Coord(posx, posy, posx + width, posy + height, BLUE);
+}
+void LCDMENU_RectangleAround_Active(uint16_t posx, uint16_t posy, uint16_t width, uint16_t height) {
+	ILI9341_Draw_Hollow_Rectangle_Coord(posx, posy, posx + width, posy + height, GREEN);
 }
 
 void Menu_Red_Callback(int param) {
@@ -887,45 +897,6 @@ void Menu_StoreSettings_Callback(int param) {
 }
 
 
-void Menu_LoadSettings_Callback(int param) {
-
-	//Brightness
-	MyEEPROM.UpdateItemVariableFromEEPROM(0);
-	//Day
-	MyEEPROM.UpdateItemVariableFromEEPROM(1);
-	DateTime.SetDay(menu_Day);
-	//Month
-	MyEEPROM.UpdateItemVariableFromEEPROM(2);
-	DateTime.SetMonth(menu_Month);
-	//Year
-	MyEEPROM.UpdateItemVariableFromEEPROM(3);
-	DateTime.SetYear(menu_Year);
-
-	ILI9341_WriteString(5, 80, (char*)"Settings Loaded", Font_11x18, RED, WHITE);
-}
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
-{
-
-	if (UartHandle->Instance == USART3) {
-		//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_2);
-		//USART_Extract_Commands(receiveBuffer, USART_RXBUFFERSIZE);
-		//if (HAL_UART_Receive_IT(&huart3, receiveBuffer, USART_RXBUFFERSIZE) != HAL_OK){
-	    //    Error_Handler();
-		//}
-	}
-}
-
-
-
-/* - Makes input range logaritmic (0-50-100 to 0-10-100)
- * - Trasposes input range to outputMax (0-50-100 to 0-100-1000)
- * returns 0 if inputValue is < 0 or > inputMax
- * returns 1 if inputValue is OK
- * inputValue - pointer to input value
- * inputMax - maximum of input range
- * outputMax - maximum of output range
- */
 uint8_t logaritmize(uint16_t* inputValue, uint16_t inputMax, uint16_t outputMax) {
 
 	double logarithm = 0.0;
@@ -943,6 +914,91 @@ uint8_t logaritmize(uint16_t* inputValue, uint16_t inputMax, uint16_t outputMax)
 	}
     //Vystupni_maximum - (Vystupni_maximum * LOG(inputMax - value + 1)  /  LOG(inputMax))
 }
+
+
+void Menu_LoadSettings_Callback(int param) {
+
+	//Brightness
+	MyEEPROM.UpdateItemVariableFromEEPROM(0);
+	//Day
+	MyEEPROM.UpdateItemVariableFromEEPROM(1);
+	DateTime.SetDay(menu_Day);
+	//Month
+	MyEEPROM.UpdateItemVariableFromEEPROM(2);
+	DateTime.SetMonth(menu_Month);
+	//Year
+	MyEEPROM.UpdateItemVariableFromEEPROM(3);
+	DateTime.SetYear(menu_Year);
+
+	ILI9341_WriteString(5, 80, (char*)"Settings Loaded", Font_11x18, RED, WHITE);
+}
+
+
+/* - Makes input range logaritmic (0-50-100 to 0-10-100)
+ * - Trasposes input range to outputMax (0-50-100 to 0-100-1000)
+ * returns 0 if inputValue is < 0 or > inputMax
+ * returns 1 if inputValue is OK
+ * inputValue - pointer to input value
+ * inputMax - maximum of input range
+ * outputMax - maximum of output range
+ */
+void LCD_DrawSpectrum(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t brightness) {
+
+    float c = 0.0f;
+    uint16_t red, green, blue = 0;
+    float fIncrement = 1.0 / width;
+    uint16_t sixTimes = brightness * 6; //1530=255*6
+
+	for(uint16_t i = x; i <= (x + width); i++) {
+
+		if(c >= 0 && c <= (1/6.f)){
+			red = brightness;
+			green = sixTimes * c;
+			blue = 0;
+		} else if( c > (1/6.f) && c <= (1/3.f) ){
+			red = brightness - (sixTimes * (c - 1/6.f));
+			green = brightness;
+			blue = 0;
+		} else if( c > (1/3.f) && c <= (1/2.f)){
+			red = 0;
+			green = brightness;
+			blue = sixTimes * (c - 1/3.f);
+		} else if(c > (1/2.f) && c <= (2/3.f)) {
+			red = 0;
+			green = brightness - ((c - 0.5f) * sixTimes);
+			blue = brightness;
+		} else if( c > (2/3.f) && c <= (5/6.f) ){
+			red = (c - (2/3.f)) * sixTimes;
+			green = 0;
+			blue = brightness;
+		} else if(c > (5/6.f) && c <= 1 ){
+			red = brightness;
+			green = 0;
+			blue = brightness - ((c - (5/6.f)) * sixTimes);
+		}
+
+		ILI9341_Draw_Vertical_Line( i, y, y+height, ASSEMBLE_RGB(red, green, blue));
+		//HAL_Delay(1);
+
+	  c += fIncrement;
+  }
+
+  c=0.0;
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+
+	if (UartHandle->Instance == USART3) {
+		//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_2);
+		//USART_Extract_Commands(receiveBuffer, USART_RXBUFFERSIZE);
+		//if (HAL_UART_Receive_IT(&huart3, receiveBuffer, USART_RXBUFFERSIZE) != HAL_OK){
+	    //    Error_Handler();
+		//}
+	}
+}
+
+
 
 
 /* USER CODE END 4 */

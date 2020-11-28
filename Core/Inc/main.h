@@ -83,6 +83,8 @@ void Menu_SetYear_Callback(int param);
 void Menu_StoreSettings_Callback(int param);
 void Menu_LoadSettings_Callback(int param);
 
+void LCD_DrawSpectrum(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t brightness);
+
 uint8_t logaritmize(uint16_t* inputValue, uint16_t inputMax, uint16_t outputMax);
 
 

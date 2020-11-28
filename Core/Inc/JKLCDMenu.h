@@ -13,20 +13,24 @@
 void LCDMENU_ClearArea(uint16_t posx, uint16_t posy, uint16_t width, uint16_t height);
 void LCDMENU_WriteString(char* buffer, uint16_t posx, uint16_t posy);
 void LCDMENU_WriteStringActive(char* buffer, uint16_t posx, uint16_t posy);
+void LCDMENU_RectangleAround(uint16_t posx, uint16_t posy, uint16_t width, uint16_t height);
+void LCDMENU_RectangleAround_Active(uint16_t posx, uint16_t posy, uint16_t width, uint16_t height);
 
+
+#define USER_BUTTON_NONE	0
 #define USER_BUTTON_ENTER	1
 #define USER_BUTTON_UP		2
 #define USER_BUTTON_DOWN	3
-#define USER_BUTTON_NONE	0
+
 
 #define LCDMENU_X_POS 				0	//pixel width of one font character
-#define LCDMENU_Y_POS 				20	//pixel width of one font character
+#define LCDMENU_Y_POS 				23	//pixel width of one font character
 #define LCDMENU_FONTCHAR_WIDTH 		11	//pixel width of one font character
 #define LCDMENU_FONTCHAR_HEIGHT 	18	//pixel width of one font character
 #define LCDMENU_ROW_HEIGHT 			(LCDMENU_FONTCHAR_HEIGHT + 0) //pixel height of one row
 #define LCDMENU_MAX_DISP_ROWS		5   //Max displayed rows
 #define LCDMENU_HEIGHT 				(LCDMENU_MAX_DISP_ROWS * LCDMENU_ROW_HEIGHT) //pixel height of whole menu
-#define LCDMENU_WIDTH 				15 * LCDMENU_FONTCHAR_WIDTH  //Menu pixel width is  14 * LCDMENU_FONTCHAR_WIDTH
+#define LCDMENU_WIDTH 				20 * LCDMENU_FONTCHAR_WIDTH  //Menu pixel width is  14 * LCDMENU_FONTCHAR_WIDTH
 #define LCDMENU_MAX_CHARS_WIDTH 	LCDMENU_WIDTH / LCDMENU_FONTCHAR_WIDTH
 #define LCDMENU_ACTIVE_LEADSTRING 	""
 #define LCDMENU_INACTIVE_LEADSTRING ""
@@ -34,10 +38,17 @@ void LCDMENU_WriteStringActive(char* buffer, uint16_t posx, uint16_t posy);
 #define LCDMENU_SPARE_SPACES 		"                " //wil be shorten automaticaly
 #define LCDMENU_SCROLLARROW_UP 		"^"
 #define LCDMENU_SCROLLARROW_DOWN	"v"
+
+#define LCDMENU_PERPETUAL_SCROLL	0 //when reaches end -> skips to first
+
 #define LCDMENU_MAXITEMS			35
 #define LCDMENU_MAXITEMSPERLEVEL	20
 
-#define LCDMENU_PERPETUAL_SCROLL	0 //when reaches end -> skips to first
+/*LCDMENU_TEXT_COLOR;
+LCDMENU_BG_COLOR;
+LCDMENU_TEXT_COLOR_ACTIVE;
+LCDMENU_BG_COLOR_ACTIVE;*/
+
 
 
 

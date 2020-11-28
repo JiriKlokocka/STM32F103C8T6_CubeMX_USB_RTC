@@ -65,6 +65,8 @@ void JKLCDMenu::DrawMenu()
 		scrollShift = currentItemsTableIndex - LCDMENU_MAX_DISP_ROWS+1;
 	}
 	uint8_t j = 0;
+	uint8_t yOffset = (LCDMENU_ROW_HEIGHT - LCDMENU_FONTCHAR_HEIGHT) / 2;
+
 	for( uint8_t i = 0 ; i<LCDMENU_MAX_DISP_ROWS && i < currentItemsCount ; i++) {
 		//higlighted active menu row buffer fill
 		if (MenuItems[currentItemsTable[i + scrollShift]].itemIndex == currentItemIndex) {
@@ -87,12 +89,17 @@ void JKLCDMenu::DrawMenu()
 			//}
 		}
 
+
+		uint16_t itmPosX = LCDMENU_X_POS;
+		uint16_t itmPosY = LCDMENU_Y_POS + (i * LCDMENU_ROW_HEIGHT);
 		//higlighted active menu row
 		if (MenuItems[currentItemsTable[i + scrollShift]].itemIndex == currentItemIndex) {
-			LCDMENU_WriteStringActive((char*)buff, LCDMENU_X_POS, LCDMENU_Y_POS + (i * LCDMENU_ROW_HEIGHT));
+			LCDMENU_WriteStringActive((char*)buff, itmPosX, itmPosY + yOffset);
+			if(yOffset > 1) LCDMENU_RectangleAround_Active(itmPosX, itmPosY, (strlen(buff) * LCDMENU_FONTCHAR_WIDTH), LCDMENU_FONTCHAR_HEIGHT + (yOffset * 2));
 		//inactive menu row
 		} else {
-			LCDMENU_WriteString((char*)buff, LCDMENU_X_POS, LCDMENU_Y_POS + (i * LCDMENU_ROW_HEIGHT));
+			LCDMENU_WriteString((char*)buff, LCDMENU_X_POS, yOffset + LCDMENU_Y_POS + (i * LCDMENU_ROW_HEIGHT));
+			if(yOffset > 1) LCDMENU_RectangleAround(itmPosX, itmPosY, (strlen(buff) * LCDMENU_FONTCHAR_WIDTH), LCDMENU_FONTCHAR_HEIGHT + (yOffset * 2));
 		}
 		j = i;
 
@@ -101,10 +108,10 @@ void JKLCDMenu::DrawMenu()
 	//Arrow up and down scrolling
 	if(currentItemsCount > LCDMENU_MAX_DISP_ROWS){
 		if(scrollShift > 0) {
-			LCDMENU_WriteStringActive((char*)LCDMENU_SCROLLARROW_UP, LCDMENU_WIDTH - LCDMENU_FONTCHAR_WIDTH, LCDMENU_Y_POS);
+			LCDMENU_WriteStringActive((char*)LCDMENU_SCROLLARROW_UP, LCDMENU_WIDTH - LCDMENU_FONTCHAR_WIDTH, LCDMENU_Y_POS + yOffset);
 		}
 		if((j + scrollShift) != (currentItemsCount-1)) {
-			LCDMENU_WriteStringActive((char*)LCDMENU_SCROLLARROW_DOWN, LCDMENU_WIDTH - LCDMENU_FONTCHAR_WIDTH, LCDMENU_Y_POS + ((LCDMENU_MAX_DISP_ROWS-1) * LCDMENU_ROW_HEIGHT));
+			LCDMENU_WriteStringActive((char*)LCDMENU_SCROLLARROW_DOWN, LCDMENU_WIDTH - LCDMENU_FONTCHAR_WIDTH, LCDMENU_Y_POS + ((LCDMENU_MAX_DISP_ROWS-1) * LCDMENU_ROW_HEIGHT)  + yOffset);
 		}
 	}
 
