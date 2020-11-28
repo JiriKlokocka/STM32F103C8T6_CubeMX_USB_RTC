@@ -209,17 +209,19 @@ int main(void)
   //ILI9341_Set_Rotation(SCREEN_VERTICAL_1);
   ILI9341_Fill_Screen(BLACK);
   //Crosshair
-  ILI9341_Draw_Horizontal_Line(0, LCD_HEIGHT/2, LCD_WIDTH, DARKGREY);
+  //ILI9341_Draw_Horizontal_Line(0, LCD_HEIGHT/2, LCD_WIDTH, DARKGREY);
   //ILI9341_Draw_Vertical_Line(LCD_WIDTH/2, 0, LCD_HEIGHT, DARKGREY);
   //Top Row
-  ILI9341_Draw_Rectangle(0, 0, LCD_WIDTH, 18, ASSEMBLE_RGB(100,100,100));
-  //ILI9341_WriteString(320/3, 6, "System started", Font_7x10, WHITE, ASSEMBLE_RGB(20,20,20));
+  ILI9341_Draw_Rectangle(0, 0, LCD_WIDTH, 20, NAVY);
+  ILI9341_WriteString(320/3, 4, "System started", Font_7x10, WHITE, NAVY);
 
   //Spectrum
-  LCD_DrawSpectrum(0, LCD_HEIGHT/2, LCD_WIDTH/2, LCD_HEIGHT/2, 255);
+  LCD_DrawSpectrum(20, LCD_HEIGHT/2 + 40 , LCD_WIDTH/2 - 40 , LCD_HEIGHT/2 - 60, 255);
+  ILI9341_Draw_Hollow_Rectangle(20, LCD_HEIGHT/2 + 40 , LCD_WIDTH/2 - 40 , LCD_HEIGHT/2 - 60, DARKGREY);
 
   /*---------LCD Log init-------------*/
-  ILI9341_Log_Init( LCD_WIDTH/2  , LCD_HEIGHT/2 + 0, LCD_WIDTH/2-1 , LCD_HEIGHT/2-1, BLACK, GREEN, 0);
+  ILI9341_Log_Init( LCD_WIDTH/2 + 20  , LCD_HEIGHT/2 + 40, LCD_WIDTH/2 - 40 , LCD_HEIGHT/2 - 60, BLACK, GREEN, 0);
+  ILI9341_Draw_Hollow_Rectangle(LCD_WIDTH/2 + 20  , LCD_HEIGHT/2 + 40, LCD_WIDTH/2 - 40 , LCD_HEIGHT/2 - 60,  DARKGREY);
 
   /*---------USB CDC Test-------------*/
   //sprintf((char*)buff, "pokus");
@@ -312,10 +314,10 @@ int main(void)
  
 			  //Print Date
 			  DateTime.DateForPrint((char*)buff);
-			  ILI9341_WriteString(0, 0,(char*)buff, Font_11x18, ASSEMBLE_RGB(20,60,20), ASSEMBLE_RGB(150,150,150));
+			  ILI9341_WriteString(0, 2,(char*)buff, Font_11x18, DARKGREY, NAVY);
 			  //Print Time
 			  DateTime.TimeForPrint((char*)buff);
-			  ILI9341_WriteString(LCD_WIDTH-90, 0, (char*)buff, Font_11x18, ASSEMBLE_RGB(20,20,60), ASSEMBLE_RGB(150,150,150));			  //Serial output
+			  ILI9341_WriteString(LCD_WIDTH-90, 2, (char*)buff, Font_11x18, DARKGREY, NAVY);			  //Serial output
 			  //Print Time to serial
 
 			  DateTime.TimeForPrintLn((char*)buff);
@@ -337,14 +339,14 @@ int main(void)
 
 		  if(timeCnt % 250 == 0) {
 			  //==========BEGIN 0.5 sec===========
-			  //sprintf((char*)buff, "Time Counter:%i\n", timeCnt );
+			  sprintf((char*)buff, "timeCnt: %i\n", timeCnt );
 			  //sprintf((char*)buff, "ENCODER: %i     ", __HAL_TIM_GET_COUNTER(&htim4) );
 			  //ILI9341_WriteString(160+10, 75, (char*)buff, Font_7x10, ORANGE, BLACK);
 			  //CDC_Transmit_FS((uint8_t*)buff, strlen((char*)buff));
 			  //sprintf((char*)buff, "Time Counter:%i\n", timeCnt );
 			  //sprintf((char*)buff, "R:%i G:%i B:%i\n", (int16_t) pwm1_value, (int16_t) pwm1_value, (int16_t) pwm2_value);
 
-			  sprintf((char*)buff, " #: %i\n", ringbuf_elements(&ringBuffer));
+			  //sprintf((char*)buff, " #: %i\n", ringbuf_elements(&ringBuffer));
 
 			  ILI9341_LogToLCD(buff);
 
@@ -977,7 +979,7 @@ void LCD_DrawSpectrum(uint16_t x, uint16_t y, uint16_t width, uint16_t height, u
 			blue = brightness - ((c - (5/6.f)) * sixTimes);
 		}
 
-		ILI9341_Draw_Vertical_Line( i, y, y+height, ASSEMBLE_RGB(red, green, blue));
+		ILI9341_Draw_Vertical_Line( i, y, height, ASSEMBLE_RGB(red, green, blue));
 		//HAL_Delay(1);
 
 	  c += fIncrement;
