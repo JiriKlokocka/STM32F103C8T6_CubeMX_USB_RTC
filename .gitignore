@@ -3,6 +3,7 @@
 *.bin
 *.list
 *.mk
+Debug/
 
 # Object files
 *.o
