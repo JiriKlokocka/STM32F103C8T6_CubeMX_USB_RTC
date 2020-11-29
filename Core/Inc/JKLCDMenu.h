@@ -30,9 +30,9 @@ void LCDMENU_RectangleAround_Active(uint16_t posx, uint16_t posy, uint16_t width
 #define LCDMENU_ROW_HEIGHT 			(LCDMENU_FONTCHAR_HEIGHT + 0) //pixel height of one row
 #define LCDMENU_MAX_DISP_ROWS		5   //Max displayed rows
 #define LCDMENU_HEIGHT 				(LCDMENU_MAX_DISP_ROWS * LCDMENU_ROW_HEIGHT) //pixel height of whole menu
-#define LCDMENU_WIDTH 				20 * LCDMENU_FONTCHAR_WIDTH  //Menu pixel width is  14 * LCDMENU_FONTCHAR_WIDTH
+#define LCDMENU_WIDTH 				20 * LCDMENU_FONTCHAR_WIDTH  //Menu pixel width is:   * LCDMENU_FONTCHAR_WIDTH
 #define LCDMENU_MAX_CHARS_WIDTH 	LCDMENU_WIDTH / LCDMENU_FONTCHAR_WIDTH
-#define LCDMENU_ACTIVE_LEADSTRING 	">"
+#define LCDMENU_ACTIVE_LEADSTRING 	""
 #define LCDMENU_INACTIVE_LEADSTRING ""
 #define LCDMENU_EDIT_LEADSTRING 	""
 #define LCDMENU_SPARE_SPACES 		"                " //wil be shorten automaticaly

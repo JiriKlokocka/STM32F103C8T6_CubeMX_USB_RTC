@@ -219,7 +219,7 @@ int main(void)
   LCD_DrawSpectrum(20, LCD_HEIGHT/2 + 40 , LCD_WIDTH/2 - 40 , LCD_HEIGHT/2 - 60, 255);
   ILI9341_Draw_Hollow_Rectangle(20, LCD_HEIGHT/2 + 40 , LCD_WIDTH/2 - 40 , LCD_HEIGHT/2 - 60, DARKGREY);
 
-  /*---------LCD Log init-------------*/
+  //---------LCD Log init-------------
   ILI9341_Log_Init( LCD_WIDTH/2 + 20  , LCD_HEIGHT/2 + 40, LCD_WIDTH/2 - 40 , LCD_HEIGHT/2 - 60, BLACK, GREEN, 0);
   ILI9341_Draw_Hollow_Rectangle(LCD_WIDTH/2 + 20  , LCD_HEIGHT/2 + 40, LCD_WIDTH/2 - 40 , LCD_HEIGHT/2 - 60,  DARKGREY);
 
@@ -339,7 +339,9 @@ int main(void)
 
 		  if(timeCnt % 250 == 0) {
 			  //==========BEGIN 0.5 sec===========
+
 			  sprintf((char*)buff, "timeCnt: %i\n", timeCnt );
+
 			  //sprintf((char*)buff, "ENCODER: %i     ", __HAL_TIM_GET_COUNTER(&htim4) );
 			  //ILI9341_WriteString(160+10, 75, (char*)buff, Font_7x10, ORANGE, BLACK);
 			  //CDC_Transmit_FS((uint8_t*)buff, strlen((char*)buff));
@@ -357,7 +359,7 @@ int main(void)
 			  //==========BEGIN 0.1 sec===========
 
 			  if(btnFlag == USER_BUTTON_ENTER && HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1) == 0) {
-				  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_2);
+				  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_2);
 				  //TIM4->CNT = 0;
 				  LCDMenu.CheckButtons(btnFlag);
 				  btnFlag = USER_BUTTON_NONE;
@@ -790,6 +792,7 @@ void Interrupt_EncoderChange(){
 
 void Interrupt_ButtonPressed() {
 	btnFlag = USER_BUTTON_ENTER;
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_2);
 }
 
 
