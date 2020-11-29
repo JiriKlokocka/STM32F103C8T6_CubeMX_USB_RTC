@@ -3,7 +3,9 @@
 *.bin
 *.list
 *.mk
+debug.log
 Debug/
+
 
 # Object files
 *.o
