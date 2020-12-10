@@ -17,6 +17,7 @@ JKLCDMenu::JKLCDMenu()
 	currentLevelID = 0;
 	btnPressed = BTN_NONE;
 	btnEdit = BTN_NONE;
+
 }
 
 
@@ -51,69 +52,87 @@ void JKLCDMenu::CheckButtons(uint8_t btnNumber) {
 
 }
 
+void JKLCDMenu::Init()
+{
+	LCDMENU_ClearArea(LCDMENU_X_POS, LCDMENU_Y_POS, LCDMENU_WIDTH + LCDMENU_TEXT_OFFSET_X, LCDMENU_HEIGHT +  LCDMENU_TEXT_OFFSET_Y);
+	DrawMenu();
+}
+
 void JKLCDMenu::DrawMenu()
 {
-	char buff[50];
-	uint16_t pixelWidth = 0;
+	char buff[80];
+	char buffValue[20];
+	//uint16_t pixelWidth = 0;
 	currentItemsCount = 0;
 	uint8_t scrollShift = 0;
 
 	FillCurrentItemsTable(currentLevelID); //sets also currentItemsCount
 
-
 	if(currentItemsTableIndex > (LCDMENU_MAX_DISP_ROWS -1) ) {
 		scrollShift = currentItemsTableIndex - LCDMENU_MAX_DISP_ROWS+1;
 	}
 	uint8_t j = 0;
-	uint8_t yOffset = (LCDMENU_ROW_HEIGHT - LCDMENU_FONTCHAR_HEIGHT) / 2;
 
 	for( uint8_t i = 0 ; i<LCDMENU_MAX_DISP_ROWS && i < currentItemsCount ; i++) {
-		//higlighted active menu row buffer fill
-		if (MenuItems[currentItemsTable[i + scrollShift]].itemIndex == currentItemIndex) {
-			sprintf((char*)buff, "%s%s%s", LCDMENU_ACTIVE_LEADSTRING, MenuItems[currentItemsTable[i + scrollShift]].text, LCDMENU_SPARE_SPACES);
-		//inactive active menu row buffer fill
-		} else {
-			sprintf((char*)buff, "%s%s%s", LCDMENU_INACTIVE_LEADSTRING, MenuItems[currentItemsTable[i + scrollShift]].text, LCDMENU_SPARE_SPACES);
+
+		int32_t value = 0;
+		uint8_t showValInline = MenuItems[currentItemsTable[i + scrollShift]].showValInLine;
+		uint8_t hasValue = 0;
+		uint8_t valueLen = 0;
+		uint8_t textLen = 0;
+
+		if(MenuItems[currentItemsTable[i + scrollShift]].value != NULL) {
+			hasValue = 1;
+			value = *MenuItems[currentItemsTable[i + scrollShift]].value;
+			valueLen = sprintf((char*)buffValue, "%li", value);
 		}
 
-					//current item index:
-					//MenuItems[currentItemsTable[i + scrollShift]].itemIndex
+		//highlighted active menu row buffer fill
+		if (MenuItems[currentItemsTable[i + scrollShift]].itemIndex == currentItemIndex) {
+			textLen = sprintf(buff, "%s%s", LCDMENU_ACTIVE_LEADSTRING, MenuItems[currentItemsTable[i + scrollShift]].text);
+		//inactive active menu row buffer fill
+		} else {
+			textLen = sprintf((char*)buff, "%s%s", LCDMENU_INACTIVE_LEADSTRING, MenuItems[currentItemsTable[i + scrollShift]].text);
+		}
+
+		//add spaces till the end
+		snprintf(buff + textLen, textLen + strlen(LCDMENU_SPARE_SPACES), "%s",LCDMENU_SPARE_SPACES);
 
 		//truncate string to fit the menu width
-		pixelWidth = strlen(buff) * LCDMENU_FONTCHAR_WIDTH;
-		if((pixelWidth / LCDMENU_FONTCHAR_WIDTH) > LCDMENU_MAX_CHARS_WIDTH){
-			//if(currentItemsCount > LCDMENU_MAX_DISP_ROWS){
-			//	buff[LCDMENU_MAX_CHARS_WIDTH - 1] = '\0';
-			//} else {
-				buff[LCDMENU_MAX_CHARS_WIDTH] = '\0';
-			//}
+		buff[LCDMENU_MAX_ITEM_CHARS] = '\0';
+
+		//add value to end of line
+		if(hasValue && showValInline) {
+			sprintf((char*)buff + strlen(buff) - valueLen - 3, " %s", buffValue);
 		}
 
 
 		uint16_t itmPosX = LCDMENU_X_POS;
 		uint16_t itmPosY = LCDMENU_Y_POS + (i * LCDMENU_ROW_HEIGHT);
+
 		//higlighted active menu row
 		if (MenuItems[currentItemsTable[i + scrollShift]].itemIndex == currentItemIndex) {
-			LCDMENU_WriteStringActive((char*)buff, itmPosX, itmPosY + yOffset);
-			if(yOffset > 1) LCDMENU_RectangleAround_Active(itmPosX, itmPosY, (strlen(buff) * LCDMENU_FONTCHAR_WIDTH), LCDMENU_FONTCHAR_HEIGHT + (yOffset * 2));
+			LCDMENU_WriteStringActive((char*)buff, itmPosX + LCDMENU_TEXT_OFFSET_X, itmPosY + LCDMENU_TEXT_OFFSET_Y);
+			if(LCDMENU_USE_RECTANGLES) LCDMENU_RectangleAround_Active(itmPosX, itmPosY, (strlen(buff) * LCDMENU_FONTCHAR_WIDTH), LCDMENU_RECTANGLE_HEIGHT);
 		//inactive menu row
 		} else {
-			LCDMENU_WriteString((char*)buff, LCDMENU_X_POS, yOffset + LCDMENU_Y_POS + (i * LCDMENU_ROW_HEIGHT));
-			if(yOffset > 1) LCDMENU_RectangleAround(itmPosX, itmPosY, (strlen(buff) * LCDMENU_FONTCHAR_WIDTH), LCDMENU_FONTCHAR_HEIGHT + (yOffset * 2));
+			LCDMENU_WriteString((char*)buff, LCDMENU_X_POS + LCDMENU_TEXT_OFFSET_X, LCDMENU_TEXT_OFFSET_Y + LCDMENU_Y_POS + (i * LCDMENU_ROW_HEIGHT));
+			if(LCDMENU_USE_RECTANGLES) LCDMENU_RectangleAround(itmPosX, itmPosY, (strlen(buff) * LCDMENU_FONTCHAR_WIDTH), LCDMENU_RECTANGLE_HEIGHT);
 		}
 		j = i;
 
 	}
 
-	//Arrow up and down scrolling
+	//Arrow up and down for scrolling
 	if(currentItemsCount > LCDMENU_MAX_DISP_ROWS){
 		if(scrollShift > 0) {
-			LCDMENU_WriteStringActive((char*)LCDMENU_SCROLLARROW_UP, LCDMENU_WIDTH - LCDMENU_FONTCHAR_WIDTH, LCDMENU_Y_POS + yOffset);
+			LCDMENU_WriteStringActive((char*)LCDMENU_SCROLLARROW_UP, (LCDMENU_MAX_ITEM_CHARS + 1) * LCDMENU_FONTCHAR_WIDTH - LCDMENU_TEXT_OFFSET_X, LCDMENU_Y_POS + LCDMENU_TEXT_OFFSET_Y);
 		}
 		if((j + scrollShift) != (currentItemsCount-1)) {
-			LCDMENU_WriteStringActive((char*)LCDMENU_SCROLLARROW_DOWN, LCDMENU_WIDTH - LCDMENU_FONTCHAR_WIDTH, LCDMENU_Y_POS + ((LCDMENU_MAX_DISP_ROWS-1) * LCDMENU_ROW_HEIGHT)  + yOffset);
+			LCDMENU_WriteStringActive((char*)LCDMENU_SCROLLARROW_DOWN, (LCDMENU_MAX_ITEM_CHARS + 1) * LCDMENU_FONTCHAR_WIDTH - LCDMENU_TEXT_OFFSET_X, LCDMENU_Y_POS + ((LCDMENU_MAX_DISP_ROWS-1) * LCDMENU_ROW_HEIGHT)  + LCDMENU_TEXT_OFFSET_Y);
 		}
 	}
+
 
 }
 
@@ -163,7 +182,7 @@ void JKLCDMenu::ProcessMenu()
 
 				currentItemsTableIndex = 0;
 
-				LCDMENU_ClearArea(LCDMENU_X_POS, LCDMENU_Y_POS, LCDMENU_WIDTH, LCDMENU_HEIGHT);
+				LCDMENU_ClearArea(LCDMENU_X_POS, LCDMENU_Y_POS, LCDMENU_WIDTH + LCDMENU_TEXT_OFFSET_X, LCDMENU_HEIGHT + LCDMENU_TEXT_OFFSET_Y);
 				DrawMenu();
 				btnPressed = BTN_NONE;
 			} else if (MenuItems[currentItemIndex].itemType == ITEMTYPE_EXITSUBMENU) {
@@ -173,7 +192,7 @@ void JKLCDMenu::ProcessMenu()
 
 				currentItemsTableIndex = 0;
 
-				LCDMENU_ClearArea(LCDMENU_X_POS, LCDMENU_Y_POS, LCDMENU_WIDTH, LCDMENU_HEIGHT);
+				LCDMENU_ClearArea(LCDMENU_X_POS, LCDMENU_Y_POS, LCDMENU_WIDTH + LCDMENU_TEXT_OFFSET_X, LCDMENU_HEIGHT + LCDMENU_TEXT_OFFSET_Y);
 				DrawMenu();
 				btnPressed = BTN_NONE;
 			}
@@ -187,6 +206,7 @@ void JKLCDMenu::ProcessMenu()
 			}
 
 		} else if(btnPressed == BTN_QUIT_EDIT) {
+			LCDMENU_ClearArea(LCDMENU_X_POS, LCDMENU_Y_POS, LCDMENU_WIDTH + LCDMENU_TEXT_OFFSET_X, LCDMENU_HEIGHT + LCDMENU_TEXT_OFFSET_Y);
 			DrawMenu();
 			btnPressed = BTN_NONE;
 		}
@@ -204,15 +224,15 @@ void JKLCDMenu::DrawMenuEditHeader()
 {
 	char buff[50];
 	uint16_t pixelWidth = 0;
-	LCDMENU_ClearArea(LCDMENU_X_POS, LCDMENU_Y_POS, LCDMENU_WIDTH, LCDMENU_HEIGHT);
+	LCDMENU_ClearArea(LCDMENU_X_POS, LCDMENU_Y_POS, LCDMENU_WIDTH + LCDMENU_TEXT_OFFSET_X, LCDMENU_HEIGHT +  LCDMENU_TEXT_OFFSET_Y);
 	sprintf((char*)buff, "%s%s:%s",LCDMENU_EDIT_LEADSTRING, MenuItems[currentItemIndex].text, LCDMENU_SPARE_SPACES);
 
 	pixelWidth = strlen(buff) * LCDMENU_FONTCHAR_WIDTH;
-	if((pixelWidth / LCDMENU_FONTCHAR_WIDTH) > LCDMENU_MAX_CHARS_WIDTH){
-		buff[LCDMENU_MAX_CHARS_WIDTH] = '\0';
+	if((pixelWidth / LCDMENU_FONTCHAR_WIDTH) > LCDMENU_MAX_ITEM_CHARS){
+		buff[LCDMENU_MAX_ITEM_CHARS] = '\0';
 	}
 
-	LCDMENU_WriteStringActive((char*)buff, LCDMENU_X_POS, LCDMENU_Y_POS);
+	LCDMENU_WriteStringActive((char*)buff, LCDMENU_X_POS + LCDMENU_TEXT_OFFSET_X , LCDMENU_Y_POS + LCDMENU_TEXT_OFFSET_Y);
 }
 
 void JKLCDMenu::EditValue()
@@ -293,6 +313,7 @@ void JKLCDMenu::addItem(uint8_t parentLevelID, uint8_t levelID, uint8_t childLev
 	itm.parentLevelID = parentLevelID;
 	itm.levelID = levelID;
 	itm.childLevelID = childLevelID;
+	itm.showValInLine = 1;
 	itm.value = value;
 	itm.call = func;
 	itemCount++;
@@ -309,6 +330,7 @@ void JKLCDMenu::addItem(uint8_t parentLevelID, uint8_t levelID, uint8_t childLev
 	itm.parentLevelID = parentLevelID;
 	itm.levelID = levelID;
 	itm.childLevelID = childLevelID;
+	itm.showValInLine = 1;
 	itm.value = value;
 	itm.call = NULL;
 	itemCount++;
@@ -324,6 +346,7 @@ void JKLCDMenu::addItem(uint8_t parentLevelID, uint8_t levelID, uint8_t childLev
 	itm.parentLevelID = parentLevelID;
 	itm.levelID = levelID;
 	itm.childLevelID = childLevelID;
+	itm.showValInLine = 1;
 	itm.value = NULL;
 	itm.call = NULL;
 	itemCount++;

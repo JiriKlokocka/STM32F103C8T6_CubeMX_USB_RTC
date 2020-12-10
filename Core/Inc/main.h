@@ -98,6 +98,15 @@ uint8_t logaritmize(uint16_t* inputValue, uint16_t inputMax, uint16_t outputMax)
 #define MY_LED_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
+enum EEPROM_Values{
+	EEPROM_PWM1,
+	EEPROM_PWM2,
+	EEPROM_PWM3,
+	EEPROM_DAY,
+	EEPROM_MONTH,
+	EEPROM_YEAR
+};
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

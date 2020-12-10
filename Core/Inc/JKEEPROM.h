@@ -10,7 +10,7 @@
 
 #include "main.h"
 
-#define EEPROM_MAXITEMS 10
+#define EEPROM_MAXITEMS 128
 
 class JKEEPROM
 {
@@ -26,14 +26,25 @@ class JKEEPROM
 		EEPROM_ITEM EEPROM_Items[EEPROM_MAXITEMS];
 
 		void addItem(char* txt, uint8_t eepromPosition, uint32_t* variable);
-		uint32_t GetItemValue(uint8_t eepromPosition);
+		void addItem(char* txt, uint8_t eepromPosition, int32_t* variable);
+		void addItem(char* txt, uint8_t eepromPosition, uint16_t* variable);
+		void addItem(char* txt, uint8_t eepromPosition, int16_t* variable);
+		void addItem(char* txt, uint8_t eepromPosition, uint8_t* variable);
+		void addItem(char* txt, uint8_t eepromPosition, int8_t* variable);
+		uint32_t ReadItemValueFromEEPROM(uint8_t eepromPosition);
+		void SaveItemValueToEEPROM(uint8_t eepromPosition, uint32_t value);
 		char* GetItemText(uint8_t eepromPosition);
 		void UpdateItemVariableFromEEPROM(uint8_t eepromPosition);
 		void SaveItemVariableToEEPROM(uint8_t eepromPosition);
+		void UpdateAllItemsVariablesFromEEPROM();
+		void SaveAllItemsVariablesToEEPROM();
+		uint8_t GetItemsCount();
+
+
+	private:
+		void addItemInternal(char* txt, uint8_t eepromPosition, uint32_t* variable);
 
 		uint8_t itemsCount;
-	private:
-
 		uint8_t currentItemIndex;
 		uint16_t startAddress;
 };

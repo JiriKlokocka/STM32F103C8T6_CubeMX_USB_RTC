@@ -15,9 +15,9 @@ bool	EE_FormatPage(uint32_t PageAddress)
 	FLASH_EraseInitTypeDef	flashErase;
 	HAL_FLASH_Unlock();
 	flashErase.NbPages=1;
-		#if(_CORTEX_!=M0)
+#if(_CORTEX_!=M0)
 	flashErase.Banks = FLASH_BANK_1;
-		#endif
+#endif
 	flashErase.TypeErase = FLASH_TYPEERASE_PAGES;
 	flashErase.PageAddress = PageAddress;
 	if(HAL_FLASHEx_Erase(&flashErase,&error)==HAL_OK)
@@ -87,7 +87,7 @@ bool EE_Write(uint16_t VirtualAddress, uint32_t Data)
 		return false;
 
 	//If flash space is not empty make it empty
-	if((*(__IO uint32_t*)((VirtualAddress*4)+_EEPROM_START_FLASH_PAGE_ADDRESS)) != 0xFFFFFFFF)	
+	if((*(__IO uint32_t*)((VirtualAddress*4)+_EEPROM_START_FLASH_PAGE_ADDRESS)) != 0xFFFFFFFF)
 	{
 		//create backup of that page excluding bad data
 		EE_PageTransfer(EE_FindPageAddressOfVirtualAddress(VirtualAddress),EE_FindVirtualAddressOffset(VirtualAddress),1);
@@ -121,7 +121,7 @@ bool 	EE_Writes(uint16_t StartVirtualAddress,uint16_t HowMuchToWrite,uint32_t* D
 	//If flash space is not empty make it empty
 	for(uint16_t i=StartVirtualAddress ; i<StartVirtualAddress + HowMuchToWrite ; i++)
 	{
-		if((*(__IO uint32_t*)((i*4)+_EEPROM_START_FLASH_PAGE_ADDRESS)) != 0xFFFFFFFF)	
+		if((*(__IO uint32_t*)((i*4)+_EEPROM_START_FLASH_PAGE_ADDRESS)) != 0xFFFFFFFF)
 		{
 			//create backup of that page excluding bad data
 			EE_PageTransfer(EE_FindPageAddressOfVirtualAddress(StartVirtualAddress),EE_FindVirtualAddressOffset(StartVirtualAddress),HowMuchToWrite);
@@ -156,7 +156,7 @@ bool 	EE_WriteBytes(uint16_t StartVirtualAddress,uint16_t HowManyBytesToWrite,vo
 	//If flash space is not empty make it empty
 	for(uint16_t i=StartVirtualAddress ; i<StartVirtualAddress + _X_BYTE_ROUNDUP(HowManyBytesToWrite,4) ; i++)
 	{
-		if((*(__IO uint32_t*)((i*4)+_EEPROM_START_FLASH_PAGE_ADDRESS)) != 0xFFFFFFFF)	
+		if((*(__IO uint32_t*)((i*4)+_EEPROM_START_FLASH_PAGE_ADDRESS)) != 0xFFFFFFFF)
 		{
 			//create backup of that page excluding bad data
 			EE_PageTransfer(EE_FindPageAddressOfVirtualAddress(StartVirtualAddress),EE_FindVirtualAddressOffset(StartVirtualAddress),_X_BYTE_ROUNDUP(HowManyBytesToWrite,4));

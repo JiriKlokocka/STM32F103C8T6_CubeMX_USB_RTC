@@ -23,34 +23,61 @@ void LCDMENU_RectangleAround_Active(uint16_t posx, uint16_t posy, uint16_t width
 #define USER_BUTTON_DOWN	3
 
 
-#define LCDMENU_X_POS 				20	//pixel width of one font character
-#define LCDMENU_Y_POS 				30	//pixel width of one font character
+#define LCDMENU_X_POS 				20
+#define LCDMENU_Y_POS 				30
 #define LCDMENU_FONTCHAR_WIDTH 		11	//pixel width of one font character
-#define LCDMENU_FONTCHAR_HEIGHT 	18	//pixel width of one font character
-#define LCDMENU_ROW_HEIGHT 			(LCDMENU_FONTCHAR_HEIGHT + 0) //pixel height of one row
+#define LCDMENU_FONTCHAR_HEIGHT 	18	//pixel height of one font character
+#define LCDMENU_ROW_HEIGHT 			(LCDMENU_FONTCHAR_HEIGHT + 2)  //pixel height of one row
 #define LCDMENU_MAX_DISP_ROWS		5   //Max displayed rows
 #define LCDMENU_HEIGHT 				(LCDMENU_MAX_DISP_ROWS * LCDMENU_ROW_HEIGHT) //pixel height of whole menu
 #define LCDMENU_WIDTH 				20 * LCDMENU_FONTCHAR_WIDTH  //Menu pixel width is:   * LCDMENU_FONTCHAR_WIDTH
-#define LCDMENU_MAX_CHARS_WIDTH 	LCDMENU_WIDTH / LCDMENU_FONTCHAR_WIDTH
-#define LCDMENU_ACTIVE_LEADSTRING 	""
+#define LCDMENU_MAX_ITEM_CHARS 	LCDMENU_WIDTH / LCDMENU_FONTCHAR_WIDTH
+#define LCDMENU_ACTIVE_LEADSTRING 	">"
 #define LCDMENU_INACTIVE_LEADSTRING ""
 #define LCDMENU_EDIT_LEADSTRING 	""
-#define LCDMENU_SPARE_SPACES 		"                " //wil be shorten automaticaly
+#define LCDMENU_SPARE_SPACES 		"                          " //wil be shorten automaticaly
 #define LCDMENU_SCROLLARROW_UP 		"^"
 #define LCDMENU_SCROLLARROW_DOWN	"v"
 
 #define LCDMENU_PERPETUAL_SCROLL	0 //when reaches end -> skips to first
 
+
 #define LCDMENU_MAXITEMS			35
 #define LCDMENU_MAXITEMSPERLEVEL	20
 
-/*LCDMENU_TEXT_COLOR;
-LCDMENU_BG_COLOR;
-LCDMENU_TEXT_COLOR_ACTIVE;
-LCDMENU_BG_COLOR_ACTIVE;*/
+#define LCDMENU_TEXT_OFFSET_X		2
+#define LCDMENU_TEXT_OFFSET_Y		3
 
+#define LCDMENU_USE_RECTANGLES		0
+#define LCDMENU_RECTANGLE_HEIGHT 	(uint16_t)(LCDMENU_FONTCHAR_HEIGHT + LCDMENU_TEXT_OFFSET_Y + 1)
 
+#if(LCDMENU_USE_RECTANGLES)
+void LCDMENU_RectangleAround(uint16_t posx, uint16_t posy, uint16_t width, uint16_t height);
+void LCDMENU_RectangleAround_Active(uint16_t posx, uint16_t posy, uint16_t width, uint16_t height);
+#endif
 
+/*  Functions definitions example
+
+void LCDMENU_ClearArea(uint16_t posx, uint16_t posy, uint16_t width, uint16_t height)  {
+	ILI9341_Draw_Filled_Rectangle_Coord(posx,posy,posx+width,posy+height,BLACK);
+}
+
+void LCDMENU_WriteString(char* buffer, uint16_t posx, uint16_t posy) {
+	ILI9341_WriteString(posx, posy, (char*)buffer, Font_11x18, ORANGE, BLACK);
+}
+
+void LCDMENU_WriteStringActive(char* buffer, uint16_t posx, uint16_t posy) {
+	ILI9341_WriteString(posx, posy, (char*)buffer, Font_11x18, WHITE, BLACK);
+}
+
+void LCDMENU_RectangleAround(uint16_t posx, uint16_t posy, uint16_t width, uint16_t height) {
+	ILI9341_Draw_Hollow_Rectangle_Coord(posx, posy, posx + width, posy + height, BLACK);
+}
+void LCDMENU_RectangleAround_Active(uint16_t posx, uint16_t posy, uint16_t width, uint16_t height) {
+	ILI9341_Draw_Hollow_Rectangle_Coord(posx, posy, posx + width, posy + height, ORANGE);
+}
+
+*/
 
 typedef void (*MenuCallback)(int); //(int)
 
@@ -60,6 +87,7 @@ class JKLCDMenu
 	public:
 		JKLCDMenu();
 		void CheckButtons(uint8_t btnNumber);
+		void Init();
 		void DrawMenu();
 		void DrawMenuEditHeader();
 		void ProcessMenu();
@@ -75,6 +103,7 @@ class JKLCDMenu
 			uint8_t parentLevelID;
 			uint8_t levelID;
 			uint8_t childLevelID;
+			uint8_t showValInLine;
 		};
 
 		MENU_ITEM MenuItems[LCDMENU_MAXITEMS];

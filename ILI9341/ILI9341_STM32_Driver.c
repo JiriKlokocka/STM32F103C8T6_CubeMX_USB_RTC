@@ -51,7 +51,7 @@
 
 #include "stm32f1xx_hal.h"
 #include "ILI9341_STM32_Driver.h"
-#include "5x5_font.h"
+//#include "5x5_font.h"
 #include "main.h"
 //#include "spi.h"
 //#include "gpio.h"
@@ -700,7 +700,7 @@ void ILI9341_Draw_Filled_Rectangle_Coord(uint16_t X0, uint16_t Y0, uint16_t X1, 
 
 /*Draws a character (fonts imported from fonts.h) at X,Y location with specified font colour, size and Background colour*/
 /*See fonts.h implementation of font on what is required for changing to a different font when switching fonts libraries*/
-void ILI9341_Draw_Char(char Character, uint8_t X, uint8_t Y, uint16_t Colour, uint16_t Size, uint16_t Background_Colour)
+/*void ILI9341_Draw_Char(char Character, uint8_t X, uint8_t Y, uint16_t Colour, uint16_t Size, uint16_t Background_Colour)
 {
 		uint8_t 	function_char;
     uint8_t 	i,j;
@@ -716,7 +716,7 @@ void ILI9341_Draw_Char(char Character, uint8_t X, uint8_t Y, uint16_t Colour, ui
 		char temp[CHAR_WIDTH];
 		for(uint8_t k = 0; k<CHAR_WIDTH; k++)
 		{
-		temp[k] = font[function_char][k];
+		temp[k] = font5x5[function_char][k];
 		}
 
     // Draw pixels
@@ -736,16 +736,17 @@ void ILI9341_Draw_Char(char Character, uint8_t X, uint8_t Y, uint16_t Colour, ui
         }
     }
 }
+*/
 
 /*Draws an array of characters (fonts imported from fonts.h) at X,Y location with specified font colour, size and Background colour*/
 /*See fonts.h implementation of font on what is required for changing to a different font when switching fonts libraries*/
-void ILI9341_Draw_Text(const char* Text, uint8_t X, uint8_t Y, uint16_t Colour, uint16_t Size, uint16_t Background_Colour)
+/*void ILI9341_Draw_Text(const char* Text, uint8_t X, uint8_t Y, uint16_t Colour, uint16_t Size, uint16_t Background_Colour)
 {
     while (*Text) {
         ILI9341_Draw_Char(*Text++, X, Y, Colour, Size, Background_Colour);
         X += CHAR_WIDTH*Size;
     }
-}
+}*/
 
 /*Draws a full screen picture from flash. Image converted from RGB .jpeg/other to C array using online converter*/
 //USING CONVERTER: http://www.digole.com/tools/PicturetoC_Hex_converter.php
@@ -855,7 +856,7 @@ void ILI9341_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t c
     }
 }
 
-void ILI9341_WriteString(uint16_t x, uint16_t y, const char* str, FontDef font, uint16_t color, uint16_t bgcolor) {
+void ILI9341_WriteString(uint16_t x, uint16_t y, char* str, FontDef font, uint16_t color, uint16_t bgcolor) {
     ILI9341_Select();
 
     while(*str) {

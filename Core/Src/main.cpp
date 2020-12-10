@@ -30,7 +30,7 @@
  * 8) LED				PA8
  * 9) SDO/MISO			PA6	(SPI1_MISO)
  *
- * USART3
+* USART3
  * PB10 USART TX
  * PB11 USART RX
  *
@@ -63,6 +63,7 @@
 #include "JK_USART_Commands.h"
 #include "ILI9341_STM32_Driver.h"
 #include "eeprom.h"
+#include "eepromConfig.h"
 #include "ringbuf.h"
 #include <math.h>
 
@@ -100,16 +101,21 @@ extern uint16_t LCD_HEIGHT;
 extern uint16_t LCD_WIDTH;
 
 
-int32_t pwm1_value_A= 0;
-int32_t pwm2_value_A= 0;
-int32_t pwm3_value_A= 0;
-int32_t pwm1_value_B = 0;
+int32_t pwm1_value_A= 55;
+int32_t pwm2_value_A= 55;
+int32_t pwm3_value_A= 55;
+int32_t pwm1_value_B = 500;
 int32_t pwm2_value_B = 500;
-int32_t pwm3_value_B = 0;
+int32_t pwm3_value_B = 500;
 
-uint8_t USARTcommandBuffer[USART_CMDBUFFERSIZE];
+char USARTcommandBuffer[USART_CMDBUFFERSIZE];
+
 struct ringbuf ringBuffer;
 uint8_t ringData(USART_RXBUFFERSIZE);
+
+//struct ringbuf ringBufferCommands;
+//uint8_t ringDataCommands(USART_RXBUFFERSIZE);
+
 
 uint8_t btnFlag = 0;
 uint8_t usartFlag = 0;
@@ -124,12 +130,10 @@ JKEEPROM MyEEPROM;
 int32_t menu_Hours = 0;
 int32_t menu_Minutes = 0;
 int32_t menu_Seconds = 0;
-int32_t menu_Day = 0;
-int32_t menu_Month = 0;
-int32_t menu_Year = 0;
+int32_t menu_Day = 3;
+int32_t menu_Month = 4;
+int32_t menu_Year = 5;
 
-struct ringbuf ringBufferCommands;
-uint8_t ringDataCommands(USART_RXBUFFERSIZE);
 
 
 /* USER CODE END PV */
@@ -181,14 +185,14 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_RTC_Init();
-  //MX_USB_DEVICE_Init();
+  MX_USB_DEVICE_Init();
   MX_SPI1_Init();
   MX_TIM1_Init();
   MX_TIM4_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  uint16_t timeCnt = 0;
+  uint32_t timeCnt = 0;
   char buff[100];
 
   /*---------UART Enable interrupts-------------*/
@@ -207,198 +211,207 @@ int main(void)
   ILI9341_Init();
   ILI9341_Set_Rotation(SCREEN_HORIZONTAL_2);
   //ILI9341_Set_Rotation(SCREEN_VERTICAL_1);
+
   ILI9341_Fill_Screen(BLACK);
   //Crosshair
   //ILI9341_Draw_Horizontal_Line(0, LCD_HEIGHT/2, LCD_WIDTH, DARKGREY);
   //ILI9341_Draw_Vertical_Line(LCD_WIDTH/2, 0, LCD_HEIGHT, DARKGREY);
   //Top Row
-  ILI9341_Draw_Rectangle(0, 0, LCD_WIDTH, 20, NAVY);
-  ILI9341_WriteString(320/3, 4, "System started", Font_7x10, WHITE, NAVY);
+    ILI9341_Draw_Rectangle(0, 0, LCD_WIDTH, 20, NAVY);
+    ILI9341_WriteString(320/3, 4, (char*)"System started", Font_7x10, WHITE, NAVY);
 
-  //Spectrum
-  LCD_DrawSpectrum(20, LCD_HEIGHT/2 + 40 , LCD_WIDTH/2 - 40 , LCD_HEIGHT/2 - 60, 255);
-  ILI9341_Draw_Hollow_Rectangle(20, LCD_HEIGHT/2 + 40 , LCD_WIDTH/2 - 40 , LCD_HEIGHT/2 - 60, DARKGREY);
+    //Spectrum
+    //LCD_DrawSpectrum(20, LCD_HEIGHT/2 + 40 , LCD_WIDTH/2 - 40 , LCD_HEIGHT/2 - 60, 255);
+    //ILI9341_Draw_Hollow_Rectangle(20, LCD_HEIGHT/2 + 40 , LCD_WIDTH/2 - 40  , LCD_HEIGHT/2 - 60, DARKGREY);
 
-  //---------LCD Log init-------------
-  ILI9341_Log_Init( LCD_WIDTH/2 + 20  , LCD_HEIGHT/2 + 40, LCD_WIDTH/2 - 40 , LCD_HEIGHT/2 - 60, BLACK, GREEN, 0);
-  ILI9341_Draw_Hollow_Rectangle(LCD_WIDTH/2 + 20  , LCD_HEIGHT/2 + 40, LCD_WIDTH/2 - 40 , LCD_HEIGHT/2 - 60,  DARKGREY);
+    //---------LCD Log init-------------
+    ILI9341_Log_Init( 20  , LCD_HEIGHT/2 + 40, LCD_WIDTH - 40 + 1, LCD_HEIGHT/2 - 50 + 1, NAVY, GREEN, 0);
+
 
   /*---------USB CDC Test-------------*/
   //sprintf((char*)buff, "pokus");
   //CDC_Transmit_FS((uint8_t*)buff, strlen((char*)buff));
 
 
-  MyEEPROM.addItem((char*)"Red", 0, (uint32_t*)&pwm1_value_A);
-  MyEEPROM.addItem((char*)"Green", 0, (uint32_t*)&pwm2_value_A);
-  MyEEPROM.addItem((char*)"Blue", 0, (uint32_t*)&pwm3_value_A);
-  MyEEPROM.addItem((char*)"Day", 1, (uint32_t*)&menu_Day);
-  MyEEPROM.addItem((char*)"Month", 2, (uint32_t*)&menu_Month);
-  MyEEPROM.addItem((char*)"Year", 3, (uint32_t*)&menu_Year);
+  MyEEPROM.addItem((char*)"Red", 	EEPROM_PWM1, (uint32_t*)&pwm1_value_A);
+  MyEEPROM.addItem((char*)"Green", 	EEPROM_PWM2, (uint32_t*)&pwm2_value_A);
+  MyEEPROM.addItem((char*)"Blue", 	EEPROM_PWM3, (uint32_t*)&pwm3_value_A);
+  MyEEPROM.addItem((char*)"Day", 	EEPROM_DAY, (uint32_t*)&menu_Day);
+  MyEEPROM.addItem((char*)"Month", 	EEPROM_MONTH, (uint32_t*)&menu_Month);
+  MyEEPROM.addItem((char*)"Year", 	EEPROM_YEAR, (uint32_t*)&menu_Year);
+  DateTime.SetDay(menu_Day);
+  DateTime.SetMonth(menu_Month);
+  DateTime.SetYear(menu_Year);
 
   //sprintf((char*)buff,"%s %li ",MyEEPROM.GetItemText(3), MyEEPROM.GetItemValue(3));
   //ILI9341_WriteString(0, 165, (char*)buff, Font_11x18, RED, WHITE);
 
   enum {
-	  M_TP, //Menu Top level ID  = 0
-	  M_CL,		//Menu Colors ID  = 1
-	  M_TM,		//Menu Time ID  = 2
-	  M_DT,		//Menu Date ID = 3
-	  M_SB,			//Menu Submenu3 ID = 4
+ 	  M_TOP, //Menu Top level ID  = 0
+ 	  M_CLR,		//Menu Colors ID  = 1
+ 	  M_TIM,		//Menu Time ID  = 2
+ 	  M_DAT,		//Menu Date ID = 3
+ 	  M_SUB,			//Menu Submenu3 ID = 4
 
-  };
+   };
 
-  /*---------LCD Menu init-------------*/
-  LCDMenu.addItem(M_TP,M_TP,M_CL,(char*)"R G B", 			ITEMTYPE_GOTOSUBMENU);
-	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Back..", 		ITEMTYPE_EXITSUBMENU);
-	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Red A", 			ITEMTYPE_NORMAL, 	&pwm1_value_A, 	Menu_Red_Callback);
-	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Green A",			ITEMTYPE_NORMAL, 	&pwm2_value_A, 	Menu_Green_Callback);
-	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Blue A",			ITEMTYPE_NORMAL, 	&pwm3_value_A, 	Menu_Blue_Callback);
-	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Red B", 			ITEMTYPE_NORMAL, 	&pwm1_value_B);
-	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Green B",			ITEMTYPE_NORMAL, 	&pwm2_value_B);
-	  LCDMenu.addItem(M_TP,M_CL,M_TP,(char*)"Blue B",			ITEMTYPE_NORMAL, 	&pwm3_value_B);
-  LCDMenu.addItem(M_TP,M_TP,M_TM,(char*)"Set time", 		ITEMTYPE_GOTOSUBMENU);
-  	  LCDMenu.addItem(M_TP,M_TM,M_TP,(char*)"Back..", 			ITEMTYPE_EXITSUBMENU);
-  	  LCDMenu.addItem(M_TP,M_TM,M_TP,(char*)"Hours", 			ITEMTYPE_NORMAL, 	&menu_Hours, 	Menu_SetHours_Callback);
-  	  LCDMenu.addItem(M_TP,M_TM,M_TP,(char*)"Minutes", 			ITEMTYPE_NORMAL, 	&menu_Minutes, 	Menu_SetMinutes_Callback);
-  	  LCDMenu.addItem(M_TP,M_TM,M_TP,(char*)"Seconds", 			ITEMTYPE_NORMAL, 	&menu_Seconds, 	Menu_SetSeconds_Callback);
-  LCDMenu.addItem(M_TP,M_TP,3,(char*)"Set date", 			ITEMTYPE_GOTOSUBMENU);
-  	  LCDMenu.addItem(M_TP,3,M_TP,(char*)"Back..", 				ITEMTYPE_EXITSUBMENU);
-  	  LCDMenu.addItem(M_TP,3,M_TP,(char*)"Day", 				ITEMTYPE_NORMAL, 		&menu_Day, 	Menu_SetDay_Callback);
-  	  LCDMenu.addItem(M_TP,3,M_TP,(char*)"Month", 				ITEMTYPE_NORMAL, 	&menu_Month, 	Menu_SetMonth_Callback);
-  	  LCDMenu.addItem(M_TP,3,M_TP,(char*)"Year", 				ITEMTYPE_NORMAL, 	&menu_Year, 	Menu_SetYear_Callback);
-      LCDMenu.addItem(M_TP,3,4,(char*)"To submenu3", 			ITEMTYPE_GOTOSUBMENU);
-  	  	  LCDMenu.addItem(M_TM,4,M_TP,(char*)"Back..", 				ITEMTYPE_EXITSUBMENU);
-  	  	  LCDMenu.addItem(M_TM,4,M_TP,(char*)"Submenu3.1", 			ITEMTYPE_NORMAL, 	&pwm1_value_A);
-  	  	  LCDMenu.addItem(M_TM,4,M_TP,(char*)"Submenu3.2", 			ITEMTYPE_NORMAL, 	&pwm2_value_A);
-  	  	  LCDMenu.addItem(M_TM,4,M_TP,(char*)"Submenu3.3", 			ITEMTYPE_NORMAL, 	&pwm3_value_A);
-  LCDMenu.addItem(M_TP,M_TP,M_TP,(char*)"Store settings", 	ITEMTYPE_CALLBACK_ONLY,	 	 NULL, 	Menu_StoreSettings_Callback);
-  LCDMenu.addItem(M_TP,M_TP,M_TP,(char*)"Load settings", 	ITEMTYPE_CALLBACK_ONLY, 	 NULL, 	Menu_LoadSettings_Callback);
+   /*---------LCD Menu init-------------*/
+   LCDMenu.addItem(M_TOP,M_TOP,M_CLR,(char*)"R G B", 			ITEMTYPE_GOTOSUBMENU);
+ 	  LCDMenu.addItem(M_TOP,M_CLR,0,(char*)"Back..", 			ITEMTYPE_EXITSUBMENU);
+ 	  LCDMenu.addItem(M_TOP,M_CLR,0,(char*)"Red", 				ITEMTYPE_NORMAL, 	&pwm1_value_A, 	Menu_Red_Callback);
+ 	  LCDMenu.addItem(M_TOP,M_CLR,0,(char*)"Green",				ITEMTYPE_NORMAL, 	&pwm2_value_A, 	Menu_Green_Callback);
+ 	  LCDMenu.addItem(M_TOP,M_CLR,0,(char*)"Blue",				ITEMTYPE_NORMAL, 	&pwm3_value_A, 	Menu_Blue_Callback);
+ 	  LCDMenu.addItem(M_TOP,M_CLR,0,(char*)"Red A", 				ITEMTYPE_NORMAL, 	&pwm1_value_A, 	Menu_Red_Callback);
+ 	  LCDMenu.addItem(M_TOP,M_CLR,0,(char*)"Green B",			ITEMTYPE_NORMAL, 	&pwm2_value_A, 	Menu_Green_Callback);
+ 	  LCDMenu.addItem(M_TOP,M_CLR,0,(char*)"Blue A",				ITEMTYPE_NORMAL, 	&pwm3_value_A, 	Menu_Blue_Callback);
+   LCDMenu.addItem(M_TOP,M_TOP,M_TIM,(char*)"Set time", 		ITEMTYPE_GOTOSUBMENU);
+   	  LCDMenu.addItem(M_TOP,M_TIM,0,(char*)"Back..", 			ITEMTYPE_EXITSUBMENU);
+   	  LCDMenu.addItem(M_TOP,M_TIM,0,(char*)"Hours", 				ITEMTYPE_NORMAL, 	&menu_Hours, 	Menu_SetHours_Callback);
+   	  LCDMenu.addItem(M_TOP,M_TIM,0,(char*)"Minutes", 			ITEMTYPE_NORMAL, 	&menu_Minutes, 	Menu_SetMinutes_Callback);
+   	  LCDMenu.addItem(M_TOP,M_TIM,0,(char*)"Seconds", 			ITEMTYPE_NORMAL, 	&menu_Seconds, 	Menu_SetSeconds_Callback);
+   LCDMenu.addItem(M_TOP,M_TOP,M_DAT,(char*)"Set date", 		ITEMTYPE_GOTOSUBMENU);
+   	  LCDMenu.addItem(M_TOP,M_DAT,0,(char*)"Back..", 			ITEMTYPE_EXITSUBMENU);
+   	  LCDMenu.addItem(M_TOP,M_DAT,0,(char*)"Day", 				ITEMTYPE_NORMAL, 		&menu_Day, 	Menu_SetDay_Callback);
+   	  LCDMenu.addItem(M_TOP,M_DAT,0,(char*)"Month", 				ITEMTYPE_NORMAL, 	&menu_Month, 	Menu_SetMonth_Callback);
+   	  LCDMenu.addItem(M_TOP,M_DAT,0,(char*)"Year", 				ITEMTYPE_NORMAL, 	&menu_Year, 	Menu_SetYear_Callback);
+      LCDMenu.addItem(M_TOP,M_DAT,M_SUB,(char*)"To submenu3", 		ITEMTYPE_GOTOSUBMENU);
+   	  	  LCDMenu.addItem(M_DAT,M_SUB,0,(char*)"Back..", 			ITEMTYPE_EXITSUBMENU);
+   	  	  LCDMenu.addItem(M_DAT,M_SUB,0,(char*)"Submenu3.1", 		ITEMTYPE_NORMAL, 	&pwm1_value_A);
+   	  	  LCDMenu.addItem(M_DAT,M_SUB,0,(char*)"Submenu3.2", 		ITEMTYPE_NORMAL, 	&pwm2_value_A);
+   	  	  LCDMenu.addItem(M_DAT,M_SUB,0,(char*)"Submenu3.3", 		ITEMTYPE_NORMAL, 	&pwm3_value_A);
+   LCDMenu.addItem(M_TOP,M_TOP,0,(char*)"Store settings", 	ITEMTYPE_CALLBACK_ONLY,	 	 NULL, 	Menu_StoreSettings_Callback);
+   LCDMenu.addItem(M_TOP,M_TOP,0,(char*)"Load settings", 	ITEMTYPE_CALLBACK_ONLY, 	 NULL, 	Menu_LoadSettings_Callback);
 
-  LCDMenu.DrawMenu();
+   LCDMenu.Init();
+
 
   /*---------Ring Buffer init-------------*/
   ringbuf_init(&ringBuffer, &ringData, USART_RXBUFFERSIZE);
-
+  char buffDateTime[10];
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
 
-	  /*--- LCD Menu process ---*/
-	  LCDMenu.ProcessMenu();
-
-	  /*--- USART bufer process ---*/
-	  while(ringbuf_elements(&ringBuffer) != 0) {
+		/*--- USART bufer process ---*/
+		while(ringbuf_elements(&ringBuffer) != 0) {
 
 		  uint8_t c = ringbuf_get(&ringBuffer);
 
-		  uint8_t commandLen = USART_Extract_Commands(c, USARTcommandBuffer,  USART_CMDBUFFERSIZE);
+		  uint8_t commandLen = USART_Extract_Commands(c, (uint8_t*)USARTcommandBuffer,  USART_CMDBUFFERSIZE);
 		  if(commandLen !=0 ) {
 			  USART_Process_Commands((char*)USARTcommandBuffer,commandLen );
-			  HAL_UART_Transmit(&huart3, (uint8_t*)USARTcommandBuffer,commandLen+1, HAL_MAX_DELAY);
+			  ILI9341_LogToLCD(USARTcommandBuffer);
+			  //HAL_UART_Transmit(&huart3, (uint8_t*)USARTcommandBuffer,commandLen+1, HAL_MAX_DELAY);
 		  } else {
 			  //HAL_UART_Transmit(&huart3, (uint8_t*)&c,1, HAL_MAX_DELAY);
 		  }
-	  }
+		}
 
-	/* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
-		  if(timeCnt % 500 == 0) {
-			  //==========BEGIN 1 second===========
-			  DateTime.FillDate();
-			  DateTime.FillTime();
- 
-			  //Print Date
-			  DateTime.DateForPrint((char*)buff);
-			  ILI9341_WriteString(0, 2,(char*)buff, Font_11x18, DARKGREY, NAVY);
-			  //Print Time
-			  DateTime.TimeForPrint((char*)buff);
-			  ILI9341_WriteString(LCD_WIDTH-90, 2, (char*)buff, Font_11x18, DARKGREY, NAVY);			  //Serial output
-			  //Print Time to serial
+	  if(timeCnt % 500 == 0) {
+		  //==========BEGIN 1 second===========
+		  DateTime.FillDate();
+		  DateTime.FillTime();
 
-			  DateTime.TimeForPrintLn((char*)buff);
+		  //Print Date
+		  DateTime.DateForPrint(buffDateTime);
+		  ILI9341_WriteString(0, 0, buffDateTime, Font_11x18, WHITE, NAVY);
 
-			  CDC_Transmit_FS((uint8_t*)buff, strlen((char*)buff));
+		  //Print Time
+		  DateTime.TimeForPrint(buffDateTime);
+		  ILI9341_WriteString(LCD_WIDTH-90, 0, buffDateTime, Font_11x18, WHITE, NAVY);
 
-			  //HAL_UART_Transmit(&huart3, (uint8_t*)buff, strlen((char*)buff), 10);
-			  //sprintf((char*)buff, "Time Counter:%i  ", timeCnt );
-			  //ILI9341_WriteString(10, 75, (char*)buff, Font_7x10, WHITE, BLACK);
-			  //=========gradient=======
-			  /*for(uint16_t i = 0; i <= (320); i++)
-			  {
-				  uint16_t RGB = ((2560/320)*i)/10;
-			  	  ILI9341_Draw_Rectangle(i, 200, 1, 40, ASSEMBLE_RGB(0, 256-RGB, RGB));
-			  }*/
-			  //==========END===========
 
+		  //Print Time to serial
+
+		  //DateTime.TimeForPrintLn((char*)buff);
+		  //CDC_Transmit_FS((uint8_t*)buff, strlen((char*)buff));
+
+		  //HAL_UART_Transmit(&huart3, (uint8_t*)buff, strlen((char*)buff), 10);
+		  //sprintf((char*)buff, "Time Counter:%i  ", timeCnt );
+		  //ILI9341_WriteString(10, 75, (char*)buff, Font_7x10, WHITE, BLACK);
+		  //==========END 1 second===========
+
+	  }
+
+	  if(timeCnt % 250 == 0) {
+		  //==========BEGIN 0.5 sec===========
+		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_2);
+		  //sprintf((char*)buff, "Time Counter:%i\n", timeCnt );
+		  //sprintf((char*)buff, "ENCODER: %i     ", __HAL_TIM_GET_COUNTER(&htim4) );
+		  //ILI9341_WriteString(160+10, 75, (char*)buff, Font_7x10, ORANGE, BLACK);
+		  //CDC_Transmit_FS((uint8_t*)buff, strlen((char*)buff));
+
+		  sprintf((char*)buff, "Time Counter:%li\n", timeCnt );
+
+		  //sprintf((char*)buff, "R:%i G:%i B:%i\n", (int16_t) pwm1_value, (int16_t) pwm1_value, (int16_t) pwm2_value);
+
+		  //sprintf((char*)buff, " #: %i\n", ringbuf_elements(&ringBuffer));
+
+		  //sprintf((char*)buff, "ES:%08x ET:%08x VA:%x\n", _EEPROM_START_FLASH_PAGE_ADDRESS, _EEPROM_TRANSFER_PAGE_ADDRESS, _EEPROM_Num_VirtualAdd_IN_PAGE);
+
+
+		  //sprintf((char*)buff, " EE:R:%liG:%liB:%li\n", MyEEPROM.ReadItemValueFromEEPROM(EEPROM_PWM1), MyEEPROM.ReadItemValueFromEEPROM(EEPROM_PWM2), MyEEPROM.ReadItemValueFromEEPROM(EEPROM_PWM3));
+
+		  ILI9341_LogToLCD(buff);
+
+		  //==========END 0.5 sec===========
+	  }
+
+
+	  if(timeCnt % 10 == 0) {
+		  //==========BEGIN 0.02 sec===========
+
+		  if(btnFlag == USER_BUTTON_ENTER && HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1) == GPIO_PIN_SET) {
+
+			  LCDMenu.CheckButtons(btnFlag);
+			  btnFlag = USER_BUTTON_NONE;
 		  }
+		  LCDMenu.ProcessMenu();
 
-		  if(timeCnt % 250 == 0) {
-			  //==========BEGIN 0.5 sec===========
-
-			  sprintf((char*)buff, "timeCnt: %i\n", timeCnt );
-
-			  //sprintf((char*)buff, "ENCODER: %i     ", __HAL_TIM_GET_COUNTER(&htim4) );
-			  //ILI9341_WriteString(160+10, 75, (char*)buff, Font_7x10, ORANGE, BLACK);
-			  //CDC_Transmit_FS((uint8_t*)buff, strlen((char*)buff));
-			  //sprintf((char*)buff, "Time Counter:%i\n", timeCnt );
-			  //sprintf((char*)buff, "R:%i G:%i B:%i\n", (int16_t) pwm1_value, (int16_t) pwm1_value, (int16_t) pwm2_value);
-
-			  //sprintf((char*)buff, " #: %i\n", ringbuf_elements(&ringBuffer));
-
-			  ILI9341_LogToLCD(buff);
-
-			  //==========END 0.5 sec===========
-		  }
-
-		  if(timeCnt % 50 == 0) {
-			  //==========BEGIN 0.1 sec===========
-
-			  if(btnFlag == USER_BUTTON_ENTER && HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1) == 0) {
-				  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_2);
-				  //TIM4->CNT = 0;
-				  LCDMenu.CheckButtons(btnFlag);
-				  btnFlag = USER_BUTTON_NONE;
-			  }
-
-			  //==========END 0.1 sec===========
-		  }
-
-		  //==========BEGIN 1 ms===========
-
-		  //PWM RED
-		  if(pwm1_value_B < pwm1_value_A && pwm1_value_B < 500) {
-			  pwm1_value_B+=1;
-			  pwm1_setvalue(pwm1_value_B);
-		  } else if(pwm1_value_B > pwm1_value_A && pwm1_value_B > 0) {
-			  pwm1_value_B-=1;
-			  pwm1_setvalue(pwm1_value_B);
-		  }
-		  //PWM GREEN
-		  if(pwm2_value_B < pwm2_value_A && pwm2_value_B < 500) {
-			  pwm2_value_B+=1;
-			  pwm2_setvalue(pwm2_value_B);
-		  } else if(pwm2_value_B > pwm2_value_A && pwm2_value_B > 0) {
-			  pwm2_value_B-=1;
-			  pwm2_setvalue(pwm2_value_B);
-		  }
-		  //PWM BLUE
-		  if(pwm3_value_B < pwm3_value_A && pwm3_value_B < 500) {
-			  pwm3_value_B+=1;
-			  pwm3_setvalue(pwm3_value_B);
-		  } else if(pwm3_value_B > pwm3_value_A && pwm3_value_B > 0) {
-			  pwm3_value_B-=1;
-			  pwm3_setvalue(pwm3_value_B);
-		  }
+		  //==========END 0.02 sec===========
+	  }
 
 
-		  //==========END 1 ms===========
-		  HAL_Delay(1);
-		  timeCnt++;
+
+	  //==========BEGIN 1 ms===========
+
+	  //PWM RED
+	  if(pwm1_value_B < pwm1_value_A && pwm1_value_B < 500) {
+		  pwm1_value_B+=1;
+		  pwm1_setvalue(pwm1_value_B);
+	  } else if(pwm1_value_B > pwm1_value_A && pwm1_value_B > 0) {
+		  pwm1_value_B-=1;
+		  pwm1_setvalue(pwm1_value_B);
+	  }
+	  //PWM GREEN
+	  if(pwm2_value_B < pwm2_value_A && pwm2_value_B < 500) {
+		  pwm2_value_B+=1;
+		  pwm2_setvalue(pwm2_value_B);
+	  } else if(pwm2_value_B > pwm2_value_A && pwm2_value_B > 0) {
+		  pwm2_value_B-=1;
+		  pwm2_setvalue(pwm2_value_B);
+	  }
+	  //PWM BLUE
+	  if(pwm3_value_B < pwm3_value_A && pwm3_value_B < 500) {
+		  pwm3_value_B+=1;
+		  pwm3_setvalue(pwm3_value_B);
+	  } else if(pwm3_value_B > pwm3_value_A && pwm3_value_B > 0) {
+		  pwm3_value_B-=1;
+		  pwm3_setvalue(pwm3_value_B);
+	  }
+
+
+	  //==========END 1 ms===========
+	  HAL_Delay(1);
+	  timeCnt++;
 
 
   }
@@ -450,6 +463,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  /** Enables the Clock Security System
+  */
+  HAL_RCC_EnableCSS();
 }
 
 /**
@@ -771,7 +787,8 @@ void SetMySeconds(uint8_t val) {
 
 void Interrupt_EncoderChange(){
 	static int16_t previousEncoderCnt = 0;
-	//uint8_t encoderDirection = 0;
+
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_2);
 
 	int16_t encoderCnt = 0;
 	uint8_t btnState = USER_BUTTON_NONE;
@@ -796,7 +813,6 @@ void Interrupt_ButtonPressed() {
 }
 
 
-
 void LCDMENU_ClearArea(uint16_t posx, uint16_t posy, uint16_t width, uint16_t height)  {
 	ILI9341_Draw_Filled_Rectangle_Coord(posx,posy,posx+width,posy+height,BLACK);
 }
@@ -809,12 +825,11 @@ void LCDMENU_WriteStringActive(char* buffer, uint16_t posx, uint16_t posy) {
 	ILI9341_WriteString(posx, posy, (char*)buffer, Font_11x18, WHITE, BLACK);
 }
 
-
 void LCDMENU_RectangleAround(uint16_t posx, uint16_t posy, uint16_t width, uint16_t height) {
-	ILI9341_Draw_Hollow_Rectangle_Coord(posx, posy, posx + width, posy + height, BLUE);
+	ILI9341_Draw_Hollow_Rectangle_Coord(posx, posy, posx + width, posy + height, BLACK);
 }
 void LCDMENU_RectangleAround_Active(uint16_t posx, uint16_t posy, uint16_t width, uint16_t height) {
-	ILI9341_Draw_Hollow_Rectangle_Coord(posx, posy, posx + width, posy + height, GREEN);
+	ILI9341_Draw_Hollow_Rectangle_Coord(posx, posy, posx + width, posy + height, ORANGE);
 }
 
 void Menu_Red_Callback(int param) {
@@ -877,7 +892,7 @@ void Menu_SetMonth_Callback(int param) {
 void Menu_SetYear_Callback(int param) {
 	menu_Year = DateTime.GetYear();
 	menu_Year = menu_Year + param;
-	if(menu_Year < 0) menu_Month = 0;
+	if(menu_Year < 0) menu_Year = 0;
 	if(menu_Year > 99) menu_Year = 99;
 	DateTime.SetYear((uint8_t)menu_Year);
 }
@@ -886,67 +901,41 @@ void Menu_SetYear_Callback(int param) {
 
 void Menu_StoreSettings_Callback(int param) {
 
-	//Brightness
-	MyEEPROM.SaveItemVariableToEEPROM(0);
-	//Day
 	menu_Day = DateTime.GetDay();
-	MyEEPROM.SaveItemVariableToEEPROM(1);
-	//Month
 	menu_Month = DateTime.GetMonth();
-	MyEEPROM.SaveItemVariableToEEPROM(2);
-	//Year
 	menu_Year = DateTime.GetYear();
-	MyEEPROM.SaveItemVariableToEEPROM(3);
 
-	ILI9341_WriteString(5, 80, (char*)"Settings stored", Font_11x18, RED, WHITE);
-}
+	//MyEEPROM.SaveAllItemsVariablesToEEPROM();
 
+	MyEEPROM.SaveItemVariableToEEPROM(EEPROM_PWM1); //Red PWM
+	MyEEPROM.SaveItemVariableToEEPROM(EEPROM_PWM2); //Green PWM
+	MyEEPROM.SaveItemVariableToEEPROM(EEPROM_PWM3); //Blue PWM
+	MyEEPROM.SaveItemVariableToEEPROM(EEPROM_DAY); 	//Day
+	MyEEPROM.SaveItemVariableToEEPROM(EEPROM_MONTH); //Month
+	MyEEPROM.SaveItemVariableToEEPROM(EEPROM_YEAR); //Year*/
 
-uint8_t logaritmize(uint16_t* inputValue, uint16_t inputMax, uint16_t outputMax) {
-
-	double logarithm = 0.0;
-	uint16_t value = *inputValue;
-	if(value <= inputMax && value >= 0) {
-	    logarithm = outputMax - (outputMax * log10(500 - value + 1) / log10(500));
-	    if(logarithm < 0) {
-	        logarithm = 0;
-	    }
-	    logarithm = round(logarithm);
-	    *inputValue = (uint16_t)logarithm;
-	    return 1;
-	} else {
-		return 0;
-	}
-    //Vystupni_maximum - (Vystupni_maximum * LOG(inputMax - value + 1)  /  LOG(inputMax))
+	ILI9341_WriteString(LCDMENU_X_POS, 80, (char*)"Settings stored", Font_11x18, RED, WHITE);
 }
 
 
 void Menu_LoadSettings_Callback(int param) {
 
-	//Brightness
-	MyEEPROM.UpdateItemVariableFromEEPROM(0);
-	//Day
-	MyEEPROM.UpdateItemVariableFromEEPROM(1);
+	MyEEPROM.UpdateItemVariableFromEEPROM(EEPROM_PWM1); //Red PWM
+	MyEEPROM.UpdateItemVariableFromEEPROM(EEPROM_PWM2); //Red PWM
+	MyEEPROM.UpdateItemVariableFromEEPROM(EEPROM_PWM3); //Red PWM
+	MyEEPROM.UpdateItemVariableFromEEPROM(EEPROM_DAY); //Day
+	MyEEPROM.UpdateItemVariableFromEEPROM(EEPROM_MONTH); //Month
+	MyEEPROM.UpdateItemVariableFromEEPROM(EEPROM_YEAR); //Year*/
+
+	//MyEEPROM.UpdateAllItemsVariablesFromEEPROM();
+
 	DateTime.SetDay(menu_Day);
-	//Month
-	MyEEPROM.UpdateItemVariableFromEEPROM(2);
 	DateTime.SetMonth(menu_Month);
-	//Year
-	MyEEPROM.UpdateItemVariableFromEEPROM(3);
 	DateTime.SetYear(menu_Year);
 
-	ILI9341_WriteString(5, 80, (char*)"Settings Loaded", Font_11x18, RED, WHITE);
+	ILI9341_WriteString(LCDMENU_X_POS, 80, (char*)"Settings Loaded", Font_11x18, RED, WHITE);
 }
 
-
-/* - Makes input range logaritmic (0-50-100 to 0-10-100)
- * - Trasposes input range to outputMax (0-50-100 to 0-100-1000)
- * returns 0 if inputValue is < 0 or > inputMax
- * returns 1 if inputValue is OK
- * inputValue - pointer to input value
- * inputMax - maximum of input range
- * outputMax - maximum of output range
- */
 void LCD_DrawSpectrum(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t brightness) {
 
     float c = 0.0f;
@@ -1005,6 +994,32 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 
 
 
+/* - Makes input range logaritmic (0-50-100 to 0-10-100)
+ * - Trasposes input range to outputMax (0-50-100 to 0-100-1000)
+ * returns 0 if inputValue is < 0 or > inputMax
+ * returns 1 if inputValue is OK
+ * inputValue - pointer to input value
+ * inputMax - maximum of input range
+ * outputMax - maximum of output range
+ */
+uint8_t logaritmize(uint16_t* inputValue, uint16_t inputMax, uint16_t outputMax) {
+
+	double logarithm = 0.0;
+	uint16_t value = *inputValue;
+	if(value <= inputMax && value >= 0) {
+	    logarithm = outputMax - (outputMax * log10(500 - value + 1) / log10(500));
+	    if(logarithm < 0) {
+	        logarithm = 0;
+	    }
+	    logarithm = round(logarithm);
+	    *inputValue = (uint16_t)logarithm;
+	    return 1;
+	} else {
+		return 0;
+	}
+    //Vystupni_maximum - (Vystupni_maximum * LOG(inputMax - value + 1)  /  LOG(inputMax))
+}
+
 
 /* USER CODE END 4 */
 
@@ -1038,4 +1053,3 @@ void assert_failed(uint8_t *file, uint32_t line)
 #endif /* USE_FULL_ASSERT */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
